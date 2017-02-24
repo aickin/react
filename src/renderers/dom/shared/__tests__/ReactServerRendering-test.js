@@ -391,7 +391,7 @@ describe('ReactDOMServer', () => {
       expect(numClicks).toEqual(2);
     });
 
-    describe('basic rendering', function() {
+    describe('basic element rendering', function() {
       itRenders('should render a blank div', render =>
         render(<div/>).then(e => expect(e.tagName.toLowerCase()).toBe('div')));
 
@@ -409,6 +409,187 @@ describe('ReactDOMServer', () => {
         render(<div><br/></div>).then(e => {
           expect(e.childNodes.length).toBe(1);
           expect(e.firstChild.tagName.toLowerCase()).toBe('br');
+        })
+      );
+    });
+
+    describe('property to attribute mapping', function() {
+      describe('string properties', function() {
+        itRenders('renders simple numbers', (render) => {
+          return render(<div width={30}/>).then(e => expect(e.getAttribute('width')).toBe('30'));
+        });
+
+        itRenders('renders simple strings', (render) => {
+          return render(<div width={'30'}/>).then(e => expect(e.getAttribute('width')).toBe('30'));
+        });
+
+        // this seems like it might mask programmer error, but it's existing behavior.
+        itRenders('renders string prop with true value', render =>
+          render(<a href={true}/>).then(e => expect(e.getAttribute('href')).toBe('true')));
+
+        // this seems like it might mask programmer error, but it's existing behavior.
+        itRenders('renders string prop with false value', render =>
+          render(<a href={false}/>).then(e => expect(e.getAttribute('href')).toBe('false')));
+
+        // this seems like somewhat odd behavior, as it isn't how <a html> works
+        // in HTML, but it's existing behavior.
+        itRenders('renders string prop with true value', render =>
+          /* eslint-disable react/jsx-boolean-value */
+          render(<a href/>).then(e => expect(e.getAttribute('href')).toBe('true')));
+          /* eslint-enable react/jsx-boolean-value */
+      });
+
+      describe('boolean properties', function() {
+        itRenders('renders boolean prop with true value', render =>
+          render(<div hidden={true}/>).then(e => expect(e.getAttribute('hidden')).toBe('')));
+
+        itRenders('renders boolean prop with false value', render =>
+          render(<div hidden={false}/>).then(e => expect(e.getAttribute('hidden')).toBe(null)));
+
+        itRenders('renders boolean prop with missing value', render => {
+          /* eslint-disable react/jsx-boolean-value */
+          return render(<div hidden/>).then(e => expect(e.getAttribute('hidden')).toBe(''));
+          /* eslint-enable react/jsx-boolean-value */
+        });
+
+        itRenders('renders boolean prop with self value', render => {
+          return render(<div hidden="hidden"/>).then(e => expect(e.getAttribute('hidden')).toBe(''));
+        });
+
+        // this does not seem like correct behavior, since hidden="" in HTML indicates
+        // that the boolean property is present. however, it is how the current code
+        // behaves, so the test is included here.
+        itRenders('renders boolean prop with "" value', render =>
+          render(<div hidden=""/>).then(e => expect(e.getAttribute('hidden')).toBe(null)));
+
+        // this seems like it might mask programmer error, but it's existing behavior.
+        itRenders('renders boolean prop with string value', render =>
+          render(<div hidden="foo"/>).then(e => expect(e.getAttribute('hidden')).toBe('')));
+
+        // this seems like it might mask programmer error, but it's existing behavior.
+        itRenders('renders boolean prop with array value', render =>
+          render(<div hidden={['foo', 'bar']}/>).then(e => expect(e.getAttribute('hidden')).toBe('')));
+
+        // this seems like it might mask programmer error, but it's existing behavior.
+        itRenders('renders boolean prop with object value', render =>
+          render(<div hidden={{foo:'bar'}}/>).then(e => expect(e.getAttribute('hidden')).toBe('')));
+
+        // this seems like it might mask programmer error, but it's existing behavior.
+        itRenders('renders boolean prop with non-zero number value', render =>
+          render(<div hidden={10}/>).then(e => expect(e.getAttribute('hidden')).toBe('')));
+
+        // this seems like it might mask programmer error, but it's existing behavior.
+        itRenders('renders boolean prop with zero value', render =>
+          render(<div hidden={0}/>).then(e => expect(e.getAttribute('hidden')).toBe(null)));
+      });
+
+      describe('download property (combined boolean/string attribute)', function() {
+        itRenders('handles download prop with true value', render =>
+          render(<a download={true}/>).then(e => expect(e.getAttribute('download')).toBe('')));
+
+        itRenders('handles download prop with false value', render =>
+          render(<a download={false}/>).then(e => expect(e.getAttribute('download')).toBe(null)));
+
+        itRenders('handles download prop with no value', render =>
+          /* eslint-disable react/jsx-boolean-value */
+          render(<a download/>).then(e => expect(e.getAttribute('download')).toBe('')));
+          /* eslint-enable react/jsx-boolean-value */
+
+        itRenders('handles download prop with string value', render =>
+          render(<a download="myfile"/>).then(e => expect(e.getAttribute('download')).toBe('myfile')));
+
+        itRenders('handles download prop with string "true" value', render =>
+          render(<a download={'true'}/>).then(e => expect(e.getAttribute('download')).toBe('true')));
+      });
+
+      describe('className property', function() {
+        itRenders('renders className prop with string value', render =>
+          render(<div className="myClassName"/>).then(e => expect(e.getAttribute('class')).toBe('myClassName')));
+
+        itRenders('renders className prop with empty string value', render =>
+          render(<div className=""/>).then(e => expect(e.getAttribute('class')).toBe('')));
+
+        // this probably is just masking programmer error, but it is existing behavior.
+        itRenders('renders className prop with true value', render =>
+          render(<div className={true}/>).then(e => expect(e.getAttribute('class')).toBe('true')));
+
+        // this probably is just masking programmer error, but it is existing behavior.
+        itRenders('renders className prop with false value', render =>
+          render(<div className={false}/>).then(e => expect(e.getAttribute('class')).toBe('false')));
+
+        // this probably is just masking programmer error, but it is existing behavior.
+        /* eslint-disable react/jsx-boolean-value */
+        itRenders('renders className prop with false value', render =>
+          render(<div className/>).then(e => expect(e.getAttribute('class')).toBe('true')));
+        /* eslint-enable react/jsx-boolean-value */
+      });
+
+      describe('htmlFor property', function() {
+        itRenders('renders htmlFor with string value', render =>
+          render(<div htmlFor="myFor"/>).then(e => expect(e.getAttribute('for')).toBe('myFor')));
+
+        itRenders('renders htmlFor with an empty string', render =>
+          render(<div htmlFor=""/>).then(e => expect(e.getAttribute('for')).toBe('')));
+
+        // this probably is just masking programmer error, but it is existing behavior.
+        itRenders('renders className prop with true value', render =>
+          render(<div htmlFor={true}/>).then(e => expect(e.getAttribute('for')).toBe('true')));
+
+        // this probably is just masking programmer error, but it is existing behavior.
+        itRenders('renders className prop with false value', render =>
+          render(<div htmlFor={false}/>).then(e => expect(e.getAttribute('for')).toBe('false')));
+
+        // this probably is just masking programmer error, but it is existing behavior.
+        /* eslint-disable react/jsx-boolean-value */
+        itRenders('renders className prop with false value', render =>
+          render(<div htmlFor/>).then(e => expect(e.getAttribute('for')).toBe('true')));
+        /* eslint-enable react/jsx-boolean-value */
+
+      });
+
+      describe('props with special meaning in React', function() {
+        itRenders('does not render ref property as an attribute', render => {
+          class RefComponent extends React.Component {
+            render() {
+              return <div ref="foo"/>;
+            }
+          }
+          return render(<RefComponent/>).then(e => expect(e.getAttribute('ref')).toBe(null));
+        });
+
+        itRenders('does not render children property as an attribute', render =>
+          render(React.createElement('div', {}, 'foo')).then(e => expect(e.getAttribute('children')).toBe(null)));
+
+        itRenders('does not render key property as an attribute', render =>
+          render(<div key="foo"/>).then(e => expect(e.getAttribute('key')).toBe(null)));
+
+        itRenders('does not render dangerouslySetInnerHTML as an attribute', render =>
+          render(<div dangerouslySetInnerHTML={{__html:'foo'}}/>)
+            .then(e => expect(e.getAttribute('dangerouslySetInnerHTML')).toBe(null)));
+      });
+
+      describe('unknown attributes', function() {
+        itRenders('does not render unknown attributes', render =>
+          render(<div foo="bar"/>, 1).then(e => expect(e.getAttribute('foo')).toBe(null)));
+
+        itRenders('does render unknown data- attributes', render =>
+          render(<div data-foo="bar"/>).then(e => expect(e.getAttribute('data-foo')).toBe('bar')));
+
+        itRenders('does not render unknown attributes for non-standard elements', render =>
+          render(<nonstandard foo="bar"/>, 1).then(e => expect(e.getAttribute('foo')).toBe(null)));
+
+        itRenders('does render unknown attributes for custom elements', render =>
+          render(<custom-element foo="bar"/>).then(e => expect(e.getAttribute('foo')).toBe('bar')));
+
+        itRenders('does render unknown attributes for custom elements using is', render =>
+          render(<div is="custom-element" foo="bar"/>).then(e => expect(e.getAttribute('foo')).toBe('bar')));
+      });
+
+      itRenders('does not render HTML events', render =>
+        render(<div onClick={() => {}}/>).then(e => {
+          expect(e.getAttribute('onClick')).toBe(null);
+          expect(e.getAttribute('onClick')).toBe(null);
+          expect(e.getAttribute('click')).toBe(null);
         })
       );
     });
