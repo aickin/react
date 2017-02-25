@@ -62,7 +62,13 @@ function itRejects(desc, testFn) {
 // returns a Promise that resolves when the render is complete.
 function renderIntoDom(reactElement, domElement, errorCount = 0) {
   return expectErrors(
-    () => new Promise((resolve) => ReactDOM.render(reactElement, domElement, () => resolve(domElement.firstChild))),
+    () => new Promise((resolve) => {
+      ExecutionEnvironment.canUseDOM = true;
+      ReactDOM.render(reactElement, domElement, () => {
+        ExecutionEnvironment.canUseDOM = false;
+        resolve(domElement.firstChild);
+      });
+    }),
     errorCount
   );
 }
@@ -87,11 +93,9 @@ const clientCleanRender = (element, errorCount = 0) => {
 };
 
 const clientRenderOnServerString = (element, errorCount = 0) => {
-  return serverRender(element, errorCount).then((markup) => {
+  return serverRender(element, errorCount).then(domElement => {
     resetModules();
-    var domElement = document.createElement('div');
-    domElement.innerHTML = markup;
-    return renderIntoDom(element, domElement, errorCount);
+    return renderIntoDom(element, domElement.parentNode, errorCount);
   });
 };
 
@@ -151,6 +155,17 @@ function itThrowsOnRender(desc, testFn) {
    // get the usual markup mismatch warning.
   itRejects(`${desc} with client render on top of bad server markup`,
      () => testFn((element, warningCount = 0) => clientRenderOnBadMarkup(element, warningCount - 1)));
+}
+
+function testMarkupMatch(serverElement, clientElement, shouldMatch, errorCount = 0) {
+  return serverRender(serverElement, errorCount).then(domElement => {
+    resetModules();
+    return renderIntoDom(clientElement, domElement.parentNode, errorCount + (shouldMatch ? 0 : 1));
+  });
+}
+
+function expectMarkupMatch(serverElement, clientElement, errorCount = 0) {
+  return testMarkupMatch(serverElement, clientElement, true, errorCount);
 }
 
 function resetModules() {
@@ -1807,4 +1822,63 @@ describe('ReactDOMServer', () => {
       return render(<Component/>);
     });
   });
+
+  describe('refs', function() {
+    // refs
+    it('should reconnect element with ref on server but not on client', () => {
+      let refCount = 0;
+      class RefsComponent extends React.Component {
+        render() {
+          return <div ref={(e) => refCount++}/>;
+        }
+      }
+      return expectMarkupMatch(<RefsComponent/>, <div/>)
+        .then(() => expect(refCount).toBe(0));
+    });
+
+    it('should reconnect element with ref on client but not on server', () => {
+      let refCount = 0;
+      class RefsComponent extends React.Component {
+        render() {
+          return <div ref={(e) => refCount++}/>;
+        }
+      }
+      return expectMarkupMatch(<div/>, <RefsComponent/>)
+        .then(() => expect(refCount).toBe(1));
+    });
+
+    it('should send the correct element to ref functions on client and not call them on server', () => {
+      let refElement = null;
+      class RefsComponent extends React.Component {
+        render() {
+          return <div ref={(e) => refElement = e}/>;
+        }
+      }
+      return clientRenderOnServerString(<RefsComponent/>).then(element => {
+        expect(refElement).not.toBe(null);
+        expect(refElement).toBe(element);
+      });
+    });
+
+    it('should have string refs on client when rendered over server markup', () => {
+      class RefsComponent extends React.Component {
+        render() {
+          return <div ref="myDiv"/>;
+        }
+      }
+
+      return new Promise((resolve) => {
+        const markup = ReactDOMServer.renderToString(<RefsComponent/>);
+        const root = document.createElement('div');
+        root.innerHTML = markup;
+        let component = null;
+        ReactDOM.render(<RefsComponent ref={e => component = e}/>, root, () => {
+          expect(component.refs.myDiv).toBe(root.firstChild);
+          resolve();
+        });
+      });
+    });
+
+  });
+
 });
