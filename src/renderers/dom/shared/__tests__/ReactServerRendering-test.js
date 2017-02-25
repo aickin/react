@@ -414,608 +414,6 @@ describe('ReactDOMServer', () => {
       expect(numClicks).toEqual(2);
     });
 
-    describe('basic element rendering', function() {
-      itRenders('should render a blank div', render =>
-        render(<div/>).then(e => expect(e.tagName.toLowerCase()).toBe('div')));
-
-      itRenders('should render a div with inline styles', render =>
-        render(<div style={{color:'red', width:'30px'}}/>).then(e => {
-          expect(e.style.color).toBe('red');
-          expect(e.style.width).toBe('30px');
-        })
-      );
-
-      itRenders('should render a self-closing tag', render =>
-        render(<br/>).then(e => expect(e.tagName.toLowerCase()).toBe('br')));
-
-      itRenders('should render a self-closing tag as a child', render =>
-        render(<div><br/></div>).then(e => {
-          expect(e.childNodes.length).toBe(1);
-          expect(e.firstChild.tagName.toLowerCase()).toBe('br');
-        })
-      );
-    });
-
-    describe('property to attribute mapping', function() {
-      describe('string properties', function() {
-        itRenders('renders simple numbers', (render) => {
-          return render(<div width={30}/>).then(e => expect(e.getAttribute('width')).toBe('30'));
-        });
-
-        itRenders('renders simple strings', (render) => {
-          return render(<div width={'30'}/>).then(e => expect(e.getAttribute('width')).toBe('30'));
-        });
-
-        // this seems like it might mask programmer error, but it's existing behavior.
-        itRenders('renders string prop with true value', render =>
-          render(<a href={true}/>).then(e => expect(e.getAttribute('href')).toBe('true')));
-
-        // this seems like it might mask programmer error, but it's existing behavior.
-        itRenders('renders string prop with false value', render =>
-          render(<a href={false}/>).then(e => expect(e.getAttribute('href')).toBe('false')));
-
-        // this seems like somewhat odd behavior, as it isn't how <a html> works
-        // in HTML, but it's existing behavior.
-        itRenders('renders string prop with true value', render =>
-          /* eslint-disable react/jsx-boolean-value */
-          render(<a href/>).then(e => expect(e.getAttribute('href')).toBe('true')));
-          /* eslint-enable react/jsx-boolean-value */
-      });
-
-      describe('boolean properties', function() {
-        itRenders('renders boolean prop with true value', render =>
-          render(<div hidden={true}/>).then(e => expect(e.getAttribute('hidden')).toBe('')));
-
-        itRenders('renders boolean prop with false value', render =>
-          render(<div hidden={false}/>).then(e => expect(e.getAttribute('hidden')).toBe(null)));
-
-        itRenders('renders boolean prop with missing value', render => {
-          /* eslint-disable react/jsx-boolean-value */
-          return render(<div hidden/>).then(e => expect(e.getAttribute('hidden')).toBe(''));
-          /* eslint-enable react/jsx-boolean-value */
-        });
-
-        itRenders('renders boolean prop with self value', render => {
-          return render(<div hidden="hidden"/>).then(e => expect(e.getAttribute('hidden')).toBe(''));
-        });
-
-        // this does not seem like correct behavior, since hidden="" in HTML indicates
-        // that the boolean property is present. however, it is how the current code
-        // behaves, so the test is included here.
-        itRenders('renders boolean prop with "" value', render =>
-          render(<div hidden=""/>).then(e => expect(e.getAttribute('hidden')).toBe(null)));
-
-        // this seems like it might mask programmer error, but it's existing behavior.
-        itRenders('renders boolean prop with string value', render =>
-          render(<div hidden="foo"/>).then(e => expect(e.getAttribute('hidden')).toBe('')));
-
-        // this seems like it might mask programmer error, but it's existing behavior.
-        itRenders('renders boolean prop with array value', render =>
-          render(<div hidden={['foo', 'bar']}/>).then(e => expect(e.getAttribute('hidden')).toBe('')));
-
-        // this seems like it might mask programmer error, but it's existing behavior.
-        itRenders('renders boolean prop with object value', render =>
-          render(<div hidden={{foo:'bar'}}/>).then(e => expect(e.getAttribute('hidden')).toBe('')));
-
-        // this seems like it might mask programmer error, but it's existing behavior.
-        itRenders('renders boolean prop with non-zero number value', render =>
-          render(<div hidden={10}/>).then(e => expect(e.getAttribute('hidden')).toBe('')));
-
-        // this seems like it might mask programmer error, but it's existing behavior.
-        itRenders('renders boolean prop with zero value', render =>
-          render(<div hidden={0}/>).then(e => expect(e.getAttribute('hidden')).toBe(null)));
-      });
-
-      describe('download property (combined boolean/string attribute)', function() {
-        itRenders('handles download prop with true value', render =>
-          render(<a download={true}/>).then(e => expect(e.getAttribute('download')).toBe('')));
-
-        itRenders('handles download prop with false value', render =>
-          render(<a download={false}/>).then(e => expect(e.getAttribute('download')).toBe(null)));
-
-        itRenders('handles download prop with no value', render =>
-          /* eslint-disable react/jsx-boolean-value */
-          render(<a download/>).then(e => expect(e.getAttribute('download')).toBe('')));
-          /* eslint-enable react/jsx-boolean-value */
-
-        itRenders('handles download prop with string value', render =>
-          render(<a download="myfile"/>).then(e => expect(e.getAttribute('download')).toBe('myfile')));
-
-        itRenders('handles download prop with string "true" value', render =>
-          render(<a download={'true'}/>).then(e => expect(e.getAttribute('download')).toBe('true')));
-      });
-
-      describe('className property', function() {
-        itRenders('renders className prop with string value', render =>
-          render(<div className="myClassName"/>).then(e => expect(e.getAttribute('class')).toBe('myClassName')));
-
-        itRenders('renders className prop with empty string value', render =>
-          render(<div className=""/>).then(e => expect(e.getAttribute('class')).toBe('')));
-
-        // this probably is just masking programmer error, but it is existing behavior.
-        itRenders('renders className prop with true value', render =>
-          render(<div className={true}/>).then(e => expect(e.getAttribute('class')).toBe('true')));
-
-        // this probably is just masking programmer error, but it is existing behavior.
-        itRenders('renders className prop with false value', render =>
-          render(<div className={false}/>).then(e => expect(e.getAttribute('class')).toBe('false')));
-
-        // this probably is just masking programmer error, but it is existing behavior.
-        /* eslint-disable react/jsx-boolean-value */
-        itRenders('renders className prop with false value', render =>
-          render(<div className/>).then(e => expect(e.getAttribute('class')).toBe('true')));
-        /* eslint-enable react/jsx-boolean-value */
-      });
-
-      describe('htmlFor property', function() {
-        itRenders('renders htmlFor with string value', render =>
-          render(<div htmlFor="myFor"/>).then(e => expect(e.getAttribute('for')).toBe('myFor')));
-
-        itRenders('renders htmlFor with an empty string', render =>
-          render(<div htmlFor=""/>).then(e => expect(e.getAttribute('for')).toBe('')));
-
-        // this probably is just masking programmer error, but it is existing behavior.
-        itRenders('renders className prop with true value', render =>
-          render(<div htmlFor={true}/>).then(e => expect(e.getAttribute('for')).toBe('true')));
-
-        // this probably is just masking programmer error, but it is existing behavior.
-        itRenders('renders className prop with false value', render =>
-          render(<div htmlFor={false}/>).then(e => expect(e.getAttribute('for')).toBe('false')));
-
-        // this probably is just masking programmer error, but it is existing behavior.
-        /* eslint-disable react/jsx-boolean-value */
-        itRenders('renders className prop with false value', render =>
-          render(<div htmlFor/>).then(e => expect(e.getAttribute('for')).toBe('true')));
-        /* eslint-enable react/jsx-boolean-value */
-
-      });
-
-      describe('props with special meaning in React', function() {
-        itRenders('does not render ref property as an attribute', render => {
-          class RefComponent extends React.Component {
-            render() {
-              return <div ref="foo"/>;
-            }
-          }
-          return render(<RefComponent/>).then(e => expect(e.getAttribute('ref')).toBe(null));
-        });
-
-        itRenders('does not render children property as an attribute', render =>
-          render(React.createElement('div', {}, 'foo')).then(e => expect(e.getAttribute('children')).toBe(null)));
-
-        itRenders('does not render key property as an attribute', render =>
-          render(<div key="foo"/>).then(e => expect(e.getAttribute('key')).toBe(null)));
-
-        itRenders('does not render dangerouslySetInnerHTML as an attribute', render =>
-          render(<div dangerouslySetInnerHTML={{__html:'foo'}}/>)
-            .then(e => expect(e.getAttribute('dangerouslySetInnerHTML')).toBe(null)));
-      });
-
-      describe('unknown attributes', function() {
-        itRenders('does not render unknown attributes', render =>
-          render(<div foo="bar"/>, 1).then(e => expect(e.getAttribute('foo')).toBe(null)));
-
-        itRenders('does render unknown data- attributes', render =>
-          render(<div data-foo="bar"/>).then(e => expect(e.getAttribute('data-foo')).toBe('bar')));
-
-        itRenders('does not render unknown attributes for non-standard elements', render =>
-          render(<nonstandard foo="bar"/>, 1).then(e => expect(e.getAttribute('foo')).toBe(null)));
-
-        itRenders('does render unknown attributes for custom elements', render =>
-          render(<custom-element foo="bar"/>).then(e => expect(e.getAttribute('foo')).toBe('bar')));
-
-        itRenders('does render unknown attributes for custom elements using is', render =>
-          render(<div is="custom-element" foo="bar"/>).then(e => expect(e.getAttribute('foo')).toBe('bar')));
-      });
-
-      itRenders('does not render HTML events', render =>
-        render(<div onClick={() => {}}/>).then(e => {
-          expect(e.getAttribute('onClick')).toBe(null);
-          expect(e.getAttribute('onClick')).toBe(null);
-          expect(e.getAttribute('click')).toBe(null);
-        })
-      );
-    });
-
-    describe('components and children', function() {
-      function expectNode(node, type, value) {
-        expect(node).not.toBe(null);
-        expect(node.nodeType).toBe(type);
-        expect(node.nodeValue).toMatch(value);
-      }
-
-      function expectTextNode(node, text) {
-        expectNode(node, COMMENT_NODE_TYPE, / react-text: [0-9]+ /);
-        if (text.length > 0) {
-          node = node.nextSibling;
-          expectNode(node, TEXT_NODE_TYPE, text);
-        }
-        expectNode(node.nextSibling, COMMENT_NODE_TYPE, / \/react-text /);
-      }
-
-      function expectEmptyNode(node) {
-        expectNode(node, COMMENT_NODE_TYPE, / react-empty: [0-9]+ /);
-      }
-
-      describe('elements with text children', function() {
-        itRenders('renders a div with text', render =>
-          render(<div>Text</div>).then(e => {
-            expect(e.tagName.toLowerCase()).toBe('div');
-            expect(e.childNodes.length).toBe(1);
-            expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
-          }));
-        itRenders('renders a div with text with flanking whitespace', render =>
-          render(<div>  Text </div>).then(e => {
-            expect(e.childNodes.length).toBe(1);
-            expectNode(e.childNodes[0], TEXT_NODE_TYPE, '  Text ');
-          }));
-        itRenders('renders a div with text', render =>
-          render(<div>{'Text'}</div>).then(e => {
-            expect(e.childNodes.length).toBe(1);
-            expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
-          }));
-        itRenders('renders a div with blank text child', render =>
-          render(<div>{''}</div>).then(e => {
-            expect(e.childNodes.length).toBe(0);
-          }));
-        itRenders('renders a div with blank text children', render =>
-          render(<div>{''}{''}{''}</div>).then(e => {
-            expect(e.childNodes.length).toBe(6);
-            expectTextNode(e.childNodes[0], '');
-            expectTextNode(e.childNodes[2], '');
-            expectTextNode(e.childNodes[4], '');
-          }));
-        itRenders('renders a div with whitespace children', render =>
-          render(<div>{' '}{' '}{' '}</div>).then(e => {
-            expect(e.childNodes.length).toBe(9);
-            expectTextNode(e.childNodes[0], ' ');
-            expectTextNode(e.childNodes[3], ' ');
-            expectTextNode(e.childNodes[6], ' ');
-          }));
-        itRenders('renders a div with text sibling to a node', render =>
-          render(<div>Text<span>More Text</span></div>).then(e => {
-            expect(e.childNodes.length).toBe(4);
-            expectTextNode(e.childNodes[0], 'Text');
-            expect(e.childNodes[3].tagName.toLowerCase()).toBe('span');
-            expect(e.childNodes[3].childNodes.length).toBe(1);
-            expectNode(e.childNodes[3].firstChild, TEXT_NODE_TYPE, 'More Text');
-          }));
-        itRenders('renders a non-standard element with text', render =>
-          render(<nonstandard>Text</nonstandard>).then(e => {
-            expect(e.tagName.toLowerCase()).toBe('nonstandard');
-            expect(e.childNodes.length).toBe(1);
-            expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
-          }));
-        itRenders('renders a custom element with text', render =>
-          render(<custom-element>Text</custom-element>).then(e => {
-            expect(e.tagName.toLowerCase()).toBe('custom-element');
-            expect(e.childNodes.length).toBe(1);
-            expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
-          }));
-        itRenders('renders leading blank children with comments when there are multiple children', (render) => {
-          return render(<div>{''}foo</div>).then(e => {
-            expect(e.childNodes.length).toBe(5);
-            expectTextNode(e.childNodes[0], '');
-            expectTextNode(e.childNodes[2], 'foo');
-          });
-        });
-
-        itRenders('renders trailing blank children with comments when there are multiple children', (render) => {
-          return render(<div>foo{''}</div>).then(e => {
-            expect(e.childNodes.length).toBe(5);
-            expectTextNode(e.childNodes[0], 'foo');
-            expectTextNode(e.childNodes[3], '');
-          });
-        });
-
-        itRenders('renders an element with just one text child without comments', (render) => {
-          return render(<div>foo</div>).then(e => {
-            expect(e.childNodes.length).toBe(1);
-            expectNode(e.firstChild, TEXT_NODE_TYPE, 'foo');
-          });
-        });
-
-        itRenders('renders an element with two text children with comments', (render) => {
-          return render(<div>{'foo'}{'bar'}</div>).then(e => {
-            expect(e.childNodes.length).toBe(6);
-            expectTextNode(e.childNodes[0], 'foo');
-            expectTextNode(e.childNodes[3], 'bar');
-          });
-        });
-      });
-
-      describe('elements with number children', function() {
-        itRenders('renders a number as single child',
-          render => render(<div>{3}</div>).then(e => expect(e.textContent).toBe('3')));
-
-        // zero is falsey, so it could look like no children if the code isn't careful.
-        itRenders('renders zero as single child',
-          render => render(<div>{0}</div>).then(e => expect(e.textContent).toBe('0')));
-
-        itRenders('renders an element with number and text children with comments', (render) => {
-          return render(<div>{'foo'}{40}</div>).then(e => {
-            expect(e.childNodes.length).toBe(6);
-            expectTextNode(e.childNodes[0], 'foo');
-            expectTextNode(e.childNodes[3], '40');
-          });
-        });
-      });
-
-      describe('null, false, and undefined children', function() {
-        itRenders('renders null single child as blank',
-          render => render(<div>{null}</div>).then(e => expect(e.childNodes.length).toBe(0)));
-        itRenders('renders false single child as blank',
-          render => render(<div>{false}</div>).then(e => expect(e.childNodes.length).toBe(0)));
-        itRenders('renders undefined single child as blank',
-          render => render(<div>{undefined}</div>).then(e => expect(e.childNodes.length).toBe(0)));
-        itRenders('renders a null component as empty', (render) => {
-          const NullComponent = () => null;
-          return render(<NullComponent/>).then(e => expectEmptyNode(e));
-        });
-
-        itRenders('renders a null component children as empty', (render) => {
-          const NullComponent = () => null;
-          return render(<div><NullComponent/></div>).then(e => {
-            expect(e.childNodes.length).toBe(1);
-            expectEmptyNode(e.firstChild);
-          });
-        });
-
-        itRenders('renders a false component as empty', (render) => {
-          const FalseComponent = () => false;
-          return render(<FalseComponent />).then(e => expectEmptyNode(e));
-        });
-
-        itRenders('renders null children as blank', (render) => {
-          return render(<div>{null}foo</div>).then(e => {
-            expect(e.childNodes.length).toBe(3);
-            expectTextNode(e.childNodes[0], 'foo');
-          });
-        });
-
-        itRenders('renders false children as blank', (render) => {
-          return render(<div>{false}foo</div>).then(e => {
-            expect(e.childNodes.length).toBe(3);
-            expectTextNode(e.childNodes[0], 'foo');
-          });
-        });
-
-        itRenders('renders null and false children together as blank', (render) => {
-          return render(<div>{false}{null}foo{null}{false}</div>).then(e => {
-            expect(e.childNodes.length).toBe(3);
-            expectTextNode(e.childNodes[0], 'foo');
-          });
-        });
-
-        itRenders('renders only null and false children as blank', (render) => {
-          return render(<div>{false}{null}{null}{false}</div>).then(e => {
-            expect(e.childNodes.length).toBe(0);
-          });
-        });
-      });
-
-      describe('elements with implicit namespaces', function() {
-        itRenders('renders an svg element', render =>
-          render(<svg/>).then(e => {
-            expect(e.childNodes.length).toBe(0);
-            expect(e.tagName.toLowerCase()).toBe('svg');
-            expect(e.namespaceURI).toBe('http://www.w3.org/2000/svg');
-          }));
-        itRenders('renders svg element with an xlink', render =>
-          render(<svg><image xlinkHref="http://i.imgur.com/w7GCRPb.png"/></svg>).then(e => {
-            e = e.firstChild;
-            expect(e.childNodes.length).toBe(0);
-            expect(e.tagName.toLowerCase()).toBe('image');
-            expect(e.namespaceURI).toBe('http://www.w3.org/2000/svg');
-            expect(e.getAttributeNS('http://www.w3.org/1999/xlink', 'href')).toBe('http://i.imgur.com/w7GCRPb.png');
-          }));
-        itRenders('renders a math element', render =>
-          render(<math/>).then(e => {
-            expect(e.childNodes.length).toBe(0);
-            expect(e.tagName.toLowerCase()).toBe('math');
-            expect(e.namespaceURI).toBe('http://www.w3.org/1998/Math/MathML');
-          }));
-      });
-      // specially wrapped components
-      // (see the big switch near the beginning ofReactDOMComponent.mountComponent)
-      itRenders('renders an img', render =>
-        render(<img/>).then(e => {
-          expect(e.childNodes.length).toBe(0);
-          expect(e.nextSibling).toBe(null);
-          expect(e.tagName.toLowerCase()).toBe('img');
-        }));
-      itRenders('renders a button', render =>
-        render(<button/>).then(e => {
-          expect(e.childNodes.length).toBe(0);
-          expect(e.nextSibling).toBe(null);
-          expect(e.tagName.toLowerCase()).toBe('button');
-        }));
-
-      itRenders('renders a div with dangerouslySetInnerHTML',
-        render => render(<div dangerouslySetInnerHTML={{__html:"<span id='child'/>"}}/>).then(e => {
-          expect(e.childNodes.length).toBe(1);
-          expect(e.firstChild.tagName.toLowerCase()).toBe('span');
-          expect(e.firstChild.getAttribute('id')).toBe('child');
-          expect(e.firstChild.childNodes.length).toBe(0);
-        }));
-
-      describe('newline-eating elements', function() {
-        itRenders('renders a newline-eating tag with content not starting with \\n',
-          render => render(<pre>Hello</pre>).then(e => expect(e.textContent).toBe('Hello')));
-        itRenders('renders a newline-eating tag with content starting with \\n',
-          render => render(<pre>{'\nHello'}</pre>).then(e => expect(e.textContent).toBe('\nHello')));
-        itRenders('renders a normal tag with content starting with \\n',
-          render => render(<div>{'\nHello'}</div>).then(e => expect(e.textContent).toBe('\nHello')));
-      });
-
-      describe('different component implementations', function() {
-        function checkFooDiv(e) {
-          expect(e.childNodes.length).toBe(1);
-          expectNode(e.firstChild, TEXT_NODE_TYPE, 'foo');
-        }
-
-        itRenders('renders stateless components', render => {
-          const StatelessComponent = () => <div>foo</div>;
-          return render(<StatelessComponent/>).then(checkFooDiv);
-        });
-
-        itRenders('renders React.createClass components', render => {
-          const RccComponent = React.createClass({
-            render: function() {
-              return <div>foo</div>;
-            },
-          });
-          return render(<RccComponent/>).then(checkFooDiv);
-        });
-
-        itRenders('renders ES6 class components', render => {
-          class ClassComponent extends React.Component {
-            render() {
-              return <div>foo</div>;
-            }
-          }
-          return render(<ClassComponent/>).then(checkFooDiv);
-        });
-
-        itRenders('renders factory components', render => {
-          const FactoryComponent = () => {
-            return {
-              render: function() {
-                return <div>foo</div>;
-              },
-            };
-          };
-          return render(<FactoryComponent/>).then(checkFooDiv);
-        });
-      });
-
-      describe('component hierarchies', function() {
-        itRenders('renders single child hierarchies of components', render => {
-          const Component = (props) => <div>{props.children}</div>;
-          return render(
-            <Component>
-              <Component>
-                <Component>
-                  <Component/>
-                </Component>
-              </Component>
-            </Component>)
-            .then(element => {
-              for (var i = 0; i < 3; i++) {
-                expect(element.tagName.toLowerCase()).toBe('div');
-                expect(element.childNodes.length).toBe(1);
-                element = element.firstChild;
-              }
-              expect(element.tagName.toLowerCase()).toBe('div');
-              expect(element.childNodes.length).toBe(0);
-            });
-        });
-
-        itRenders('renders multi-child hierarchies of components', render => {
-          const Component = (props) => <div>{props.children}</div>;
-          return render(
-            <Component>
-              <Component>
-                <Component/><Component/>
-              </Component>
-              <Component>
-                <Component/><Component/>
-              </Component>
-            </Component>)
-            .then(element => {
-              expect(element.tagName.toLowerCase()).toBe('div');
-              expect(element.childNodes.length).toBe(2);
-              for (var i = 0; i < 2; i++) {
-                var child = element.childNodes[i];
-                expect(child.tagName.toLowerCase()).toBe('div');
-                expect(child.childNodes.length).toBe(2);
-                for (var j = 0; j < 2; j++) {
-                  var grandchild = child.childNodes[j];
-                  expect(grandchild.tagName.toLowerCase()).toBe('div');
-                  expect(grandchild.childNodes.length).toBe(0);
-                }
-              }
-            });
-        });
-
-        itRenders('renders a div with a child', render =>
-          render(<div id="parent"><div id="child"/></div>).then(e => {
-            expect(e.id).toBe('parent');
-            expect(e.childNodes.length).toBe(1);
-            expect(e.childNodes[0].id).toBe('child');
-            expect(e.childNodes[0].childNodes.length).toBe(0);
-          }));
-        itRenders('renders a div with multiple children', render =>
-          render(<div id="parent"><div id="child1"/><div id="child2"/></div>).then(e => {
-            expect(e.id).toBe('parent');
-            expect(e.childNodes.length).toBe(2);
-            expect(e.childNodes[0].id).toBe('child1');
-            expect(e.childNodes[0].childNodes.length).toBe(0);
-            expect(e.childNodes[1].id).toBe('child2');
-            expect(e.childNodes[1].childNodes.length).toBe(0);
-          }));
-        itRenders('renders a div with multiple children separated by whitespace', render =>
-          render(<div id="parent"><div id="child1"/> <div id="child2"/></div>).then(e => {
-            expect(e.id).toBe('parent');
-            expect(e.childNodes.length).toBe(5);
-            expect(e.childNodes[0].id).toBe('child1');
-            expect(e.childNodes[0].childNodes.length).toBe(0);
-            expectTextNode(e.childNodes[1], ' ');
-            expect(e.childNodes[4].id).toBe('child2');
-            expect(e.childNodes[4].childNodes.length).toBe(0);
-          }));
-        itRenders('renders a div with a child surrounded by whitespace', render =>
-          render(<div id="parent">  <div id="child"/>   </div>).then(e => { // eslint-disable-line no-multi-spaces
-            expect(e.id).toBe('parent');
-            expect(e.childNodes.length).toBe(7);
-            expectTextNode(e.childNodes[0], '  ');
-            expect(e.childNodes[3].id).toBe('child');
-            expect(e.childNodes[3].childNodes.length).toBe(0);
-            expectTextNode(e.childNodes[4], '   ');
-          }));
-      });
-
-      describe('escaping >, <, and &', function() {
-        itRenders('escapes >,<, and & as single child', render => {
-          return render(<div>{'<span>Text&quot;</span>'}</div>).then(e => {
-            expect(e.childNodes.length).toBe(1);
-            expectNode(e.firstChild, TEXT_NODE_TYPE, '<span>Text&quot;</span>');
-          });
-        });
-
-        itRenders('escapes >,<, and & as multiple children', render => {
-          return render(<div>{'<span>Text1&quot;</span>'}{'<span>Text2&quot;</span>'}</div>).then(e => {
-            expect(e.childNodes.length).toBe(6);
-            expectTextNode(e.childNodes[0], '<span>Text1&quot;</span>');
-            expectTextNode(e.childNodes[3], '<span>Text2&quot;</span>');
-          });
-        });
-      });
-
-      describe('components that throw errors', function() {
-        itThrowsOnRender('throws rendering a string component', (render) => {
-          const StringComponent = () => 'foo';
-          return render(<StringComponent/>, 1);
-        });
-
-        itThrowsOnRender('throws rendering an undefined component', (render) => {
-          const UndefinedComponent = () => undefined;
-          return render(<UndefinedComponent/>, 1);
-        });
-
-        itThrowsOnRender('throws rendering a number component', (render) => {
-          const NumberComponent = () => 54;
-          return render(<NumberComponent/>, 1);
-        });
-
-        itThrowsOnRender('throws when rendering null', render => render(null));
-        itThrowsOnRender('throws when rendering false', render => render(false));
-        itThrowsOnRender('throws when rendering undefined', render => render(undefined));
-        itThrowsOnRender('throws when rendering number', render => render(30));
-        itThrowsOnRender('throws when rendering string', render => render('foo'));
-      });
-    });
-
     it('should throw with silly args', () => {
       expect(
         ReactDOMServer.renderToString.bind(
@@ -1285,5 +683,907 @@ describe('ReactDOMServer', () => {
         </Wrapper>
       );
     }).toThrowError(/Cannot assign to read only property.*/);
+  });
+
+  describe('basic element rendering', function() {
+    itRenders('should render a blank div', render =>
+      render(<div/>).then(e => expect(e.tagName.toLowerCase()).toBe('div')));
+
+    itRenders('should render a div with inline styles', render =>
+      render(<div style={{color:'red', width:'30px'}}/>).then(e => {
+        expect(e.style.color).toBe('red');
+        expect(e.style.width).toBe('30px');
+      })
+    );
+
+    itRenders('should render a self-closing tag', render =>
+      render(<br/>).then(e => expect(e.tagName.toLowerCase()).toBe('br')));
+
+    itRenders('should render a self-closing tag as a child', render =>
+      render(<div><br/></div>).then(e => {
+        expect(e.childNodes.length).toBe(1);
+        expect(e.firstChild.tagName.toLowerCase()).toBe('br');
+      })
+    );
+  });
+
+  describe('property to attribute mapping', function() {
+    describe('string properties', function() {
+      itRenders('renders simple numbers', (render) => {
+        return render(<div width={30}/>).then(e => expect(e.getAttribute('width')).toBe('30'));
+      });
+
+      itRenders('renders simple strings', (render) => {
+        return render(<div width={'30'}/>).then(e => expect(e.getAttribute('width')).toBe('30'));
+      });
+
+      // this seems like it might mask programmer error, but it's existing behavior.
+      itRenders('renders string prop with true value', render =>
+        render(<a href={true}/>).then(e => expect(e.getAttribute('href')).toBe('true')));
+
+      // this seems like it might mask programmer error, but it's existing behavior.
+      itRenders('renders string prop with false value', render =>
+        render(<a href={false}/>).then(e => expect(e.getAttribute('href')).toBe('false')));
+
+      // this seems like somewhat odd behavior, as it isn't how <a html> works
+      // in HTML, but it's existing behavior.
+      itRenders('renders string prop with true value', render =>
+        /* eslint-disable react/jsx-boolean-value */
+        render(<a href/>).then(e => expect(e.getAttribute('href')).toBe('true')));
+        /* eslint-enable react/jsx-boolean-value */
+    });
+
+    describe('boolean properties', function() {
+      itRenders('renders boolean prop with true value', render =>
+        render(<div hidden={true}/>).then(e => expect(e.getAttribute('hidden')).toBe('')));
+
+      itRenders('renders boolean prop with false value', render =>
+        render(<div hidden={false}/>).then(e => expect(e.getAttribute('hidden')).toBe(null)));
+
+      itRenders('renders boolean prop with missing value', render => {
+        /* eslint-disable react/jsx-boolean-value */
+        return render(<div hidden/>).then(e => expect(e.getAttribute('hidden')).toBe(''));
+        /* eslint-enable react/jsx-boolean-value */
+      });
+
+      itRenders('renders boolean prop with self value', render => {
+        return render(<div hidden="hidden"/>).then(e => expect(e.getAttribute('hidden')).toBe(''));
+      });
+
+      // this does not seem like correct behavior, since hidden="" in HTML indicates
+      // that the boolean property is present. however, it is how the current code
+      // behaves, so the test is included here.
+      itRenders('renders boolean prop with "" value', render =>
+        render(<div hidden=""/>).then(e => expect(e.getAttribute('hidden')).toBe(null)));
+
+      // this seems like it might mask programmer error, but it's existing behavior.
+      itRenders('renders boolean prop with string value', render =>
+        render(<div hidden="foo"/>).then(e => expect(e.getAttribute('hidden')).toBe('')));
+
+      // this seems like it might mask programmer error, but it's existing behavior.
+      itRenders('renders boolean prop with array value', render =>
+        render(<div hidden={['foo', 'bar']}/>).then(e => expect(e.getAttribute('hidden')).toBe('')));
+
+      // this seems like it might mask programmer error, but it's existing behavior.
+      itRenders('renders boolean prop with object value', render =>
+        render(<div hidden={{foo:'bar'}}/>).then(e => expect(e.getAttribute('hidden')).toBe('')));
+
+      // this seems like it might mask programmer error, but it's existing behavior.
+      itRenders('renders boolean prop with non-zero number value', render =>
+        render(<div hidden={10}/>).then(e => expect(e.getAttribute('hidden')).toBe('')));
+
+      // this seems like it might mask programmer error, but it's existing behavior.
+      itRenders('renders boolean prop with zero value', render =>
+        render(<div hidden={0}/>).then(e => expect(e.getAttribute('hidden')).toBe(null)));
+    });
+
+    describe('download property (combined boolean/string attribute)', function() {
+      itRenders('handles download prop with true value', render =>
+        render(<a download={true}/>).then(e => expect(e.getAttribute('download')).toBe('')));
+
+      itRenders('handles download prop with false value', render =>
+        render(<a download={false}/>).then(e => expect(e.getAttribute('download')).toBe(null)));
+
+      itRenders('handles download prop with no value', render =>
+        /* eslint-disable react/jsx-boolean-value */
+        render(<a download/>).then(e => expect(e.getAttribute('download')).toBe('')));
+        /* eslint-enable react/jsx-boolean-value */
+
+      itRenders('handles download prop with string value', render =>
+        render(<a download="myfile"/>).then(e => expect(e.getAttribute('download')).toBe('myfile')));
+
+      itRenders('handles download prop with string "true" value', render =>
+        render(<a download={'true'}/>).then(e => expect(e.getAttribute('download')).toBe('true')));
+    });
+
+    describe('className property', function() {
+      itRenders('renders className prop with string value', render =>
+        render(<div className="myClassName"/>).then(e => expect(e.getAttribute('class')).toBe('myClassName')));
+
+      itRenders('renders className prop with empty string value', render =>
+        render(<div className=""/>).then(e => expect(e.getAttribute('class')).toBe('')));
+
+      // this probably is just masking programmer error, but it is existing behavior.
+      itRenders('renders className prop with true value', render =>
+        render(<div className={true}/>).then(e => expect(e.getAttribute('class')).toBe('true')));
+
+      // this probably is just masking programmer error, but it is existing behavior.
+      itRenders('renders className prop with false value', render =>
+        render(<div className={false}/>).then(e => expect(e.getAttribute('class')).toBe('false')));
+
+      // this probably is just masking programmer error, but it is existing behavior.
+      /* eslint-disable react/jsx-boolean-value */
+      itRenders('renders className prop with false value', render =>
+        render(<div className/>).then(e => expect(e.getAttribute('class')).toBe('true')));
+      /* eslint-enable react/jsx-boolean-value */
+    });
+
+    describe('htmlFor property', function() {
+      itRenders('renders htmlFor with string value', render =>
+        render(<div htmlFor="myFor"/>).then(e => expect(e.getAttribute('for')).toBe('myFor')));
+
+      itRenders('renders htmlFor with an empty string', render =>
+        render(<div htmlFor=""/>).then(e => expect(e.getAttribute('for')).toBe('')));
+
+      // this probably is just masking programmer error, but it is existing behavior.
+      itRenders('renders className prop with true value', render =>
+        render(<div htmlFor={true}/>).then(e => expect(e.getAttribute('for')).toBe('true')));
+
+      // this probably is just masking programmer error, but it is existing behavior.
+      itRenders('renders className prop with false value', render =>
+        render(<div htmlFor={false}/>).then(e => expect(e.getAttribute('for')).toBe('false')));
+
+      // this probably is just masking programmer error, but it is existing behavior.
+      /* eslint-disable react/jsx-boolean-value */
+      itRenders('renders className prop with false value', render =>
+        render(<div htmlFor/>).then(e => expect(e.getAttribute('for')).toBe('true')));
+      /* eslint-enable react/jsx-boolean-value */
+
+    });
+
+    describe('props with special meaning in React', function() {
+      itRenders('does not render ref property as an attribute', render => {
+        class RefComponent extends React.Component {
+          render() {
+            return <div ref="foo"/>;
+          }
+        }
+        return render(<RefComponent/>).then(e => expect(e.getAttribute('ref')).toBe(null));
+      });
+
+      itRenders('does not render children property as an attribute', render =>
+        render(React.createElement('div', {}, 'foo')).then(e => expect(e.getAttribute('children')).toBe(null)));
+
+      itRenders('does not render key property as an attribute', render =>
+        render(<div key="foo"/>).then(e => expect(e.getAttribute('key')).toBe(null)));
+
+      itRenders('does not render dangerouslySetInnerHTML as an attribute', render =>
+        render(<div dangerouslySetInnerHTML={{__html:'foo'}}/>)
+          .then(e => expect(e.getAttribute('dangerouslySetInnerHTML')).toBe(null)));
+    });
+
+    describe('unknown attributes', function() {
+      itRenders('does not render unknown attributes', render =>
+        render(<div foo="bar"/>, 1).then(e => expect(e.getAttribute('foo')).toBe(null)));
+
+      itRenders('does render unknown data- attributes', render =>
+        render(<div data-foo="bar"/>).then(e => expect(e.getAttribute('data-foo')).toBe('bar')));
+
+      itRenders('does not render unknown attributes for non-standard elements', render =>
+        render(<nonstandard foo="bar"/>, 1).then(e => expect(e.getAttribute('foo')).toBe(null)));
+
+      itRenders('does render unknown attributes for custom elements', render =>
+        render(<custom-element foo="bar"/>).then(e => expect(e.getAttribute('foo')).toBe('bar')));
+
+      itRenders('does render unknown attributes for custom elements using is', render =>
+        render(<div is="custom-element" foo="bar"/>).then(e => expect(e.getAttribute('foo')).toBe('bar')));
+    });
+
+    itRenders('does not render HTML events', render =>
+      render(<div onClick={() => {}}/>).then(e => {
+        expect(e.getAttribute('onClick')).toBe(null);
+        expect(e.getAttribute('onClick')).toBe(null);
+        expect(e.getAttribute('click')).toBe(null);
+      })
+    );
+  });
+
+  describe('components and children', function() {
+    function expectNode(node, type, value) {
+      expect(node).not.toBe(null);
+      expect(node.nodeType).toBe(type);
+      expect(node.nodeValue).toMatch(value);
+    }
+
+    function expectTextNode(node, text) {
+      expectNode(node, COMMENT_NODE_TYPE, / react-text: [0-9]+ /);
+      if (text.length > 0) {
+        node = node.nextSibling;
+        expectNode(node, TEXT_NODE_TYPE, text);
+      }
+      expectNode(node.nextSibling, COMMENT_NODE_TYPE, / \/react-text /);
+    }
+
+    function expectEmptyNode(node) {
+      expectNode(node, COMMENT_NODE_TYPE, / react-empty: [0-9]+ /);
+    }
+
+    describe('elements with text children', function() {
+      itRenders('renders a div with text', render =>
+        render(<div>Text</div>).then(e => {
+          expect(e.tagName.toLowerCase()).toBe('div');
+          expect(e.childNodes.length).toBe(1);
+          expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
+        }));
+      itRenders('renders a div with text with flanking whitespace', render =>
+        render(<div>  Text </div>).then(e => {
+          expect(e.childNodes.length).toBe(1);
+          expectNode(e.childNodes[0], TEXT_NODE_TYPE, '  Text ');
+        }));
+      itRenders('renders a div with text', render =>
+        render(<div>{'Text'}</div>).then(e => {
+          expect(e.childNodes.length).toBe(1);
+          expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
+        }));
+      itRenders('renders a div with blank text child', render =>
+        render(<div>{''}</div>).then(e => {
+          expect(e.childNodes.length).toBe(0);
+        }));
+      itRenders('renders a div with blank text children', render =>
+        render(<div>{''}{''}{''}</div>).then(e => {
+          expect(e.childNodes.length).toBe(6);
+          expectTextNode(e.childNodes[0], '');
+          expectTextNode(e.childNodes[2], '');
+          expectTextNode(e.childNodes[4], '');
+        }));
+      itRenders('renders a div with whitespace children', render =>
+        render(<div>{' '}{' '}{' '}</div>).then(e => {
+          expect(e.childNodes.length).toBe(9);
+          expectTextNode(e.childNodes[0], ' ');
+          expectTextNode(e.childNodes[3], ' ');
+          expectTextNode(e.childNodes[6], ' ');
+        }));
+      itRenders('renders a div with text sibling to a node', render =>
+        render(<div>Text<span>More Text</span></div>).then(e => {
+          expect(e.childNodes.length).toBe(4);
+          expectTextNode(e.childNodes[0], 'Text');
+          expect(e.childNodes[3].tagName.toLowerCase()).toBe('span');
+          expect(e.childNodes[3].childNodes.length).toBe(1);
+          expectNode(e.childNodes[3].firstChild, TEXT_NODE_TYPE, 'More Text');
+        }));
+      itRenders('renders a non-standard element with text', render =>
+        render(<nonstandard>Text</nonstandard>).then(e => {
+          expect(e.tagName.toLowerCase()).toBe('nonstandard');
+          expect(e.childNodes.length).toBe(1);
+          expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
+        }));
+      itRenders('renders a custom element with text', render =>
+        render(<custom-element>Text</custom-element>).then(e => {
+          expect(e.tagName.toLowerCase()).toBe('custom-element');
+          expect(e.childNodes.length).toBe(1);
+          expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
+        }));
+      itRenders('renders leading blank children with comments when there are multiple children', (render) => {
+        return render(<div>{''}foo</div>).then(e => {
+          expect(e.childNodes.length).toBe(5);
+          expectTextNode(e.childNodes[0], '');
+          expectTextNode(e.childNodes[2], 'foo');
+        });
+      });
+
+      itRenders('renders trailing blank children with comments when there are multiple children', (render) => {
+        return render(<div>foo{''}</div>).then(e => {
+          expect(e.childNodes.length).toBe(5);
+          expectTextNode(e.childNodes[0], 'foo');
+          expectTextNode(e.childNodes[3], '');
+        });
+      });
+
+      itRenders('renders an element with just one text child without comments', (render) => {
+        return render(<div>foo</div>).then(e => {
+          expect(e.childNodes.length).toBe(1);
+          expectNode(e.firstChild, TEXT_NODE_TYPE, 'foo');
+        });
+      });
+
+      itRenders('renders an element with two text children with comments', (render) => {
+        return render(<div>{'foo'}{'bar'}</div>).then(e => {
+          expect(e.childNodes.length).toBe(6);
+          expectTextNode(e.childNodes[0], 'foo');
+          expectTextNode(e.childNodes[3], 'bar');
+        });
+      });
+    });
+
+    describe('elements with number children', function() {
+      itRenders('renders a number as single child',
+        render => render(<div>{3}</div>).then(e => expect(e.textContent).toBe('3')));
+
+      // zero is falsey, so it could look like no children if the code isn't careful.
+      itRenders('renders zero as single child',
+        render => render(<div>{0}</div>).then(e => expect(e.textContent).toBe('0')));
+
+      itRenders('renders an element with number and text children with comments', (render) => {
+        return render(<div>{'foo'}{40}</div>).then(e => {
+          expect(e.childNodes.length).toBe(6);
+          expectTextNode(e.childNodes[0], 'foo');
+          expectTextNode(e.childNodes[3], '40');
+        });
+      });
+    });
+
+    describe('null, false, and undefined children', function() {
+      itRenders('renders null single child as blank',
+        render => render(<div>{null}</div>).then(e => expect(e.childNodes.length).toBe(0)));
+      itRenders('renders false single child as blank',
+        render => render(<div>{false}</div>).then(e => expect(e.childNodes.length).toBe(0)));
+      itRenders('renders undefined single child as blank',
+        render => render(<div>{undefined}</div>).then(e => expect(e.childNodes.length).toBe(0)));
+      itRenders('renders a null component as empty', (render) => {
+        const NullComponent = () => null;
+        return render(<NullComponent/>).then(e => expectEmptyNode(e));
+      });
+
+      itRenders('renders a null component children as empty', (render) => {
+        const NullComponent = () => null;
+        return render(<div><NullComponent/></div>).then(e => {
+          expect(e.childNodes.length).toBe(1);
+          expectEmptyNode(e.firstChild);
+        });
+      });
+
+      itRenders('renders a false component as empty', (render) => {
+        const FalseComponent = () => false;
+        return render(<FalseComponent />).then(e => expectEmptyNode(e));
+      });
+
+      itRenders('renders null children as blank', (render) => {
+        return render(<div>{null}foo</div>).then(e => {
+          expect(e.childNodes.length).toBe(3);
+          expectTextNode(e.childNodes[0], 'foo');
+        });
+      });
+
+      itRenders('renders false children as blank', (render) => {
+        return render(<div>{false}foo</div>).then(e => {
+          expect(e.childNodes.length).toBe(3);
+          expectTextNode(e.childNodes[0], 'foo');
+        });
+      });
+
+      itRenders('renders null and false children together as blank', (render) => {
+        return render(<div>{false}{null}foo{null}{false}</div>).then(e => {
+          expect(e.childNodes.length).toBe(3);
+          expectTextNode(e.childNodes[0], 'foo');
+        });
+      });
+
+      itRenders('renders only null and false children as blank', (render) => {
+        return render(<div>{false}{null}{null}{false}</div>).then(e => {
+          expect(e.childNodes.length).toBe(0);
+        });
+      });
+    });
+
+    describe('elements with implicit namespaces', function() {
+      itRenders('renders an svg element', render =>
+        render(<svg/>).then(e => {
+          expect(e.childNodes.length).toBe(0);
+          expect(e.tagName.toLowerCase()).toBe('svg');
+          expect(e.namespaceURI).toBe('http://www.w3.org/2000/svg');
+        }));
+      itRenders('renders svg element with an xlink', render =>
+        render(<svg><image xlinkHref="http://i.imgur.com/w7GCRPb.png"/></svg>).then(e => {
+          e = e.firstChild;
+          expect(e.childNodes.length).toBe(0);
+          expect(e.tagName.toLowerCase()).toBe('image');
+          expect(e.namespaceURI).toBe('http://www.w3.org/2000/svg');
+          expect(e.getAttributeNS('http://www.w3.org/1999/xlink', 'href')).toBe('http://i.imgur.com/w7GCRPb.png');
+        }));
+      itRenders('renders a math element', render =>
+        render(<math/>).then(e => {
+          expect(e.childNodes.length).toBe(0);
+          expect(e.tagName.toLowerCase()).toBe('math');
+          expect(e.namespaceURI).toBe('http://www.w3.org/1998/Math/MathML');
+        }));
+    });
+    // specially wrapped components
+    // (see the big switch near the beginning ofReactDOMComponent.mountComponent)
+    itRenders('renders an img', render =>
+      render(<img/>).then(e => {
+        expect(e.childNodes.length).toBe(0);
+        expect(e.nextSibling).toBe(null);
+        expect(e.tagName.toLowerCase()).toBe('img');
+      }));
+    itRenders('renders a button', render =>
+      render(<button/>).then(e => {
+        expect(e.childNodes.length).toBe(0);
+        expect(e.nextSibling).toBe(null);
+        expect(e.tagName.toLowerCase()).toBe('button');
+      }));
+
+    itRenders('renders a div with dangerouslySetInnerHTML',
+      render => render(<div dangerouslySetInnerHTML={{__html:"<span id='child'/>"}}/>).then(e => {
+        expect(e.childNodes.length).toBe(1);
+        expect(e.firstChild.tagName.toLowerCase()).toBe('span');
+        expect(e.firstChild.getAttribute('id')).toBe('child');
+        expect(e.firstChild.childNodes.length).toBe(0);
+      }));
+
+    describe('newline-eating elements', function() {
+      itRenders('renders a newline-eating tag with content not starting with \\n',
+        render => render(<pre>Hello</pre>).then(e => expect(e.textContent).toBe('Hello')));
+      itRenders('renders a newline-eating tag with content starting with \\n',
+        render => render(<pre>{'\nHello'}</pre>).then(e => expect(e.textContent).toBe('\nHello')));
+      itRenders('renders a normal tag with content starting with \\n',
+        render => render(<div>{'\nHello'}</div>).then(e => expect(e.textContent).toBe('\nHello')));
+    });
+
+    describe('different component implementations', function() {
+      function checkFooDiv(e) {
+        expect(e.childNodes.length).toBe(1);
+        expectNode(e.firstChild, TEXT_NODE_TYPE, 'foo');
+      }
+
+      itRenders('renders stateless components', render => {
+        const StatelessComponent = () => <div>foo</div>;
+        return render(<StatelessComponent/>).then(checkFooDiv);
+      });
+
+      itRenders('renders React.createClass components', render => {
+        const RccComponent = React.createClass({
+          render: function() {
+            return <div>foo</div>;
+          },
+        });
+        return render(<RccComponent/>).then(checkFooDiv);
+      });
+
+      itRenders('renders ES6 class components', render => {
+        class ClassComponent extends React.Component {
+          render() {
+            return <div>foo</div>;
+          }
+        }
+        return render(<ClassComponent/>).then(checkFooDiv);
+      });
+
+      itRenders('renders factory components', render => {
+        const FactoryComponent = () => {
+          return {
+            render: function() {
+              return <div>foo</div>;
+            },
+          };
+        };
+        return render(<FactoryComponent/>).then(checkFooDiv);
+      });
+    });
+
+    describe('component hierarchies', function() {
+      itRenders('renders single child hierarchies of components', render => {
+        const Component = (props) => <div>{props.children}</div>;
+        return render(
+          <Component>
+            <Component>
+              <Component>
+                <Component/>
+              </Component>
+            </Component>
+          </Component>)
+          .then(element => {
+            for (var i = 0; i < 3; i++) {
+              expect(element.tagName.toLowerCase()).toBe('div');
+              expect(element.childNodes.length).toBe(1);
+              element = element.firstChild;
+            }
+            expect(element.tagName.toLowerCase()).toBe('div');
+            expect(element.childNodes.length).toBe(0);
+          });
+      });
+
+      itRenders('renders multi-child hierarchies of components', render => {
+        const Component = (props) => <div>{props.children}</div>;
+        return render(
+          <Component>
+            <Component>
+              <Component/><Component/>
+            </Component>
+            <Component>
+              <Component/><Component/>
+            </Component>
+          </Component>)
+          .then(element => {
+            expect(element.tagName.toLowerCase()).toBe('div');
+            expect(element.childNodes.length).toBe(2);
+            for (var i = 0; i < 2; i++) {
+              var child = element.childNodes[i];
+              expect(child.tagName.toLowerCase()).toBe('div');
+              expect(child.childNodes.length).toBe(2);
+              for (var j = 0; j < 2; j++) {
+                var grandchild = child.childNodes[j];
+                expect(grandchild.tagName.toLowerCase()).toBe('div');
+                expect(grandchild.childNodes.length).toBe(0);
+              }
+            }
+          });
+      });
+
+      itRenders('renders a div with a child', render =>
+        render(<div id="parent"><div id="child"/></div>).then(e => {
+          expect(e.id).toBe('parent');
+          expect(e.childNodes.length).toBe(1);
+          expect(e.childNodes[0].id).toBe('child');
+          expect(e.childNodes[0].childNodes.length).toBe(0);
+        }));
+      itRenders('renders a div with multiple children', render =>
+        render(<div id="parent"><div id="child1"/><div id="child2"/></div>).then(e => {
+          expect(e.id).toBe('parent');
+          expect(e.childNodes.length).toBe(2);
+          expect(e.childNodes[0].id).toBe('child1');
+          expect(e.childNodes[0].childNodes.length).toBe(0);
+          expect(e.childNodes[1].id).toBe('child2');
+          expect(e.childNodes[1].childNodes.length).toBe(0);
+        }));
+      itRenders('renders a div with multiple children separated by whitespace', render =>
+        render(<div id="parent"><div id="child1"/> <div id="child2"/></div>).then(e => {
+          expect(e.id).toBe('parent');
+          expect(e.childNodes.length).toBe(5);
+          expect(e.childNodes[0].id).toBe('child1');
+          expect(e.childNodes[0].childNodes.length).toBe(0);
+          expectTextNode(e.childNodes[1], ' ');
+          expect(e.childNodes[4].id).toBe('child2');
+          expect(e.childNodes[4].childNodes.length).toBe(0);
+        }));
+      itRenders('renders a div with a child surrounded by whitespace', render =>
+        render(<div id="parent">  <div id="child"/>   </div>).then(e => { // eslint-disable-line no-multi-spaces
+          expect(e.id).toBe('parent');
+          expect(e.childNodes.length).toBe(7);
+          expectTextNode(e.childNodes[0], '  ');
+          expect(e.childNodes[3].id).toBe('child');
+          expect(e.childNodes[3].childNodes.length).toBe(0);
+          expectTextNode(e.childNodes[4], '   ');
+        }));
+    });
+
+    describe('escaping >, <, and &', function() {
+      itRenders('escapes >,<, and & as single child', render => {
+        return render(<div>{'<span>Text&quot;</span>'}</div>).then(e => {
+          expect(e.childNodes.length).toBe(1);
+          expectNode(e.firstChild, TEXT_NODE_TYPE, '<span>Text&quot;</span>');
+        });
+      });
+
+      itRenders('escapes >,<, and & as multiple children', render => {
+        return render(<div>{'<span>Text1&quot;</span>'}{'<span>Text2&quot;</span>'}</div>).then(e => {
+          expect(e.childNodes.length).toBe(6);
+          expectTextNode(e.childNodes[0], '<span>Text1&quot;</span>');
+          expectTextNode(e.childNodes[3], '<span>Text2&quot;</span>');
+        });
+      });
+    });
+
+    describe('components that throw errors', function() {
+      itThrowsOnRender('throws rendering a string component', (render) => {
+        const StringComponent = () => 'foo';
+        return render(<StringComponent/>, 1);
+      });
+
+      itThrowsOnRender('throws rendering an undefined component', (render) => {
+        const UndefinedComponent = () => undefined;
+        return render(<UndefinedComponent/>, 1);
+      });
+
+      itThrowsOnRender('throws rendering a number component', (render) => {
+        const NumberComponent = () => 54;
+        return render(<NumberComponent/>, 1);
+      });
+
+      itThrowsOnRender('throws when rendering null', render => render(null));
+      itThrowsOnRender('throws when rendering false', render => render(false));
+      itThrowsOnRender('throws when rendering undefined', render => render(undefined));
+      itThrowsOnRender('throws when rendering number', render => render(30));
+      itThrowsOnRender('throws when rendering string', render => render('foo'));
+    });
+  });
+
+  describe('form controls', function() {
+    describe('inputs', function() {
+      itRenders('can render an input with a value', (render) => {
+        return Promise.all([
+          render(<input value="foo" onChange={() => {}}/>).then(e =>
+            expect(e.getAttribute('value') || e.value).toBe('foo')),
+          render(<input value="foo" readOnly={true}/>).then(e =>
+            expect(e.getAttribute('value') || e.value).toBe('foo')),
+        ]);
+      });
+
+      itRenders('can render an input with a value and no onChange/readOnly', render => {
+        return render(<input value="foo"/>, 1)
+          .then(element => expect(element.getAttribute('value') || element.value).toBe('foo'));
+      });
+
+      itRenders('can render an input with a defaultValue', (render) => {
+        return render(<input defaultValue="foo"/>).then(e => {
+          expect(e.getAttribute('value') || e.value).toBe('foo');
+          expect(e.getAttribute('defaultValue')).toBe(null);
+        });
+      });
+
+      itRenders('can render an input with both a value and defaultValue part 1', render => {
+        return render(<input value="foo" defaultValue="bar" readOnly={true}/>, 1)
+          .then(element => {
+            expect(element.getAttribute('value') || element.value).toBe('foo');
+            expect(element.getAttribute('defaultValue')).toBe(null);
+          });
+      });
+
+      itRenders('can render an input with both a value and defaultValue part 2', render => {
+        return render(<input defaultValue="bar" value="foo" readOnly={true}/>, 1)
+          .then(element => {
+            expect(element.getAttribute('value') || element.value).toBe('foo');
+            expect(element.getAttribute('defaultValue')).toBe(null);
+          });
+      });
+    });
+
+    describe('checkboxes', function() {
+      itRenders('can render a checkbox that is checked', (render) => {
+        return Promise.all([
+          render(<input type="checkbox" checked={true} onChange={() => {}}/>)
+            .then(e => expect(e.checked).toBe(true)),
+          render(<input type="checkbox" checked={true} readOnly={true}/>)
+            .then(e => expect(e.checked).toBe(true)),
+        ]);
+      });
+
+      itRenders('can render a checkbox that is checked and no onChange/readOnly', render => {
+        return render(<input type="checkbox" checked={true}/>, 1)
+          .then(element => expect(element.checked).toBe(true));
+      });
+
+      itRenders('can render a checkbox with defaultChecked', (render) => {
+        return render(<input type="checkbox" defaultChecked={true}/>).then(e => {
+          expect(e.checked).toBe(true);
+          expect(e.getAttribute('defaultChecked')).toBe(null);
+        });
+      });
+
+      itRenders('can render a checkbox with both a checked and defaultChecked part 1', render => {
+        return render(<input type="checkbox" checked={true} defaultChecked={false} readOnly={true}/>, 1)
+          .then(element => {
+            expect(element.checked).toBe(true);
+            expect(element.getAttribute('defaultChecked')).toBe(null);
+          });
+      });
+
+      itRenders('can render a checkbox with both a checked and defaultChecked part 2', render => {
+        return render(<input type="checkbox" defaultChecked={false} checked={true} readOnly={true}/>, 1)
+          .then(element => {
+            expect(element.checked).toBe(true);
+            expect(element.getAttribute('defaultChecked')).toBe(null);
+          });
+      });
+    });
+
+    describe('textareas', function() {
+      // textareas
+      // ---------
+      itRenders('can render a textarea with a value', (render) => {
+        return Promise.all([
+          render(<textarea value="foo" onChange={() => {}}/>).then(e => {
+            expect(e.getAttribute('value')).toBe(null);
+            expect(e.value).toBe('foo');
+          }),
+          render(<textarea value="foo" readOnly={true}/>).then(e => {
+            expect(e.getAttribute('value')).toBe(null);
+            expect(e.value).toBe('foo');
+          }),
+        ]);
+      });
+
+      itRenders('can render a textarea with a value and no onChange/readOnly', render => {
+        return render(<textarea value="foo"/>, 1)
+          .then(element => {
+            expect(element.getAttribute('value')).toBe(null);
+            expect(element.value).toBe('foo');
+          });
+      });
+
+      itRenders('can render a textarea with a defaultValue', (render) => {
+        return render(<textarea defaultValue="foo"/>).then(e => {
+          expect(e.getAttribute('value')).toBe(null);
+          expect(e.getAttribute('defaultValue')).toBe(null);
+          expect(e.value).toBe('foo');
+        });
+      });
+
+      itRenders('can render a textarea with both a value and defaultValue part 1', render => {
+        return render(<textarea value="foo" defaultValue="bar" readOnly={true}/>, 1)
+          .then(element => {
+            expect(element.getAttribute('value')).toBe(null);
+            expect(element.getAttribute('defaultValue')).toBe(null);
+            expect(element.value).toBe('foo');
+          });
+      });
+
+      itRenders('can render a textarea with both a value and defaultValue part 2', render => {
+        return render(<textarea defaultValue="bar" value="foo" readOnly={true}/>, 1)
+          .then(element => {
+            expect(element.getAttribute('value')).toBe(null);
+            expect(element.getAttribute('defaultValue')).toBe(null);
+            expect(element.value).toBe('foo');
+          });
+      });
+    });
+
+    describe('selects', function() {
+      var options;
+      beforeEach(function() {
+        options = [
+          <option key={1} value="foo" id="foo">Foo</option>,
+          <option key={2} value="bar" id="bar">Bar</option>,
+          <option key={3} value="baz" id="baz">Baz</option>,
+        ];
+      });
+
+      const expectSelectValue = (element, selected) => {
+        // the select shouldn't have a value or defaultValue attribute.
+        expect(element.getAttribute('value')).toBe(null);
+        expect(element.getAttribute('defaultValue')).toBe(null);
+
+        ['foo', 'bar', 'baz'].forEach((value) => {
+          const selectedValue = (selected.indexOf(value) !== -1);
+          var option = element.querySelector(`#${value}`);
+          expect(option.selected).toBe(selectedValue);
+        });
+      };
+      itRenders('can render a select with a value', (render) => {
+        return Promise.all([
+          render(<select value="bar" onChange={() => {}}>{options}</select>)
+            .then(e => expectSelectValue(e, ['bar'])),
+          render(<select value="bar" readOnly={true}>{options}</select>)
+            .then(e => expectSelectValue(e, ['bar'])),
+          render(<select value={['bar', 'baz']} multiple={true} readOnly={true}>{options}</select>)
+            .then(e => expectSelectValue(e, ['bar', 'baz'])),
+        ]);
+      });
+
+      itRenders('can render a select with a value and no onChange/readOnly', render => {
+        return render(<select value="bar">{options}</select>, 1)
+          .then(element => expectSelectValue(element, ['bar']));
+      });
+
+      itRenders('can render a select with a defaultValue', (render) => {
+        return render(<select defaultValue="bar">{options}</select>)
+          .then(e => expectSelectValue(e, ['bar']));
+      });
+
+      itRenders('can render a select with both a value and defaultValue part 1', render => {
+        return render(<select value="bar" defaultValue="baz" readOnly={true}>{options}</select>, 1)
+          .then(element => expectSelectValue(element, ['bar']));
+      });
+
+      itRenders('can render a select with both a value and defaultValue part 2', render => {
+        return render(<select defaultValue="baz" value="bar" readOnly={true}>{options}</select>, 1)
+          .then(element => expectSelectValue(element, ['bar']));
+      });
+    });
+
+    // helper function that creates a controlled input
+    const getControlledFieldClass = (initialValue, onChange = () => {}, TagName = 'input',
+      valueKey = 'value', extraProps = {}, children = null) => {
+      return class ControlledField extends React.Component {
+        constructor() {
+          super();
+          this.state = {[valueKey]: initialValue};
+        }
+        handleChange(event) {
+          onChange(event);
+          this.setState({[valueKey]: event.target[valueKey]});
+        }
+        render() {
+          return (<TagName type="text"
+            {...{[valueKey]: this.state[valueKey]}}
+            onChange={this.handleChange.bind(this)}
+            {...extraProps}>{children}</TagName>);
+        }
+      };
+    };
+
+    describe('user interaction with controlled inputs', function() {
+      const testControlledField = (render, initialValue, changedValue, TagName = 'input',
+        valueKey = 'value', extraProps = {}, children = null) => {
+
+        let changeCount = 0;
+        const ControlledField = getControlledFieldClass(
+          initialValue, () => changeCount++, TagName, valueKey, extraProps, children
+        );
+
+        return render(<ControlledField/>).then(e => {
+          expect(changeCount).toBe(0);
+          expect(e[valueKey]).toBe(initialValue);
+
+          // simulate a user typing.
+          e[valueKey] = changedValue;
+          ReactTestUtils.Simulate.change(e);
+
+          expect(changeCount).toBe(1);
+          expect(e[valueKey]).toBe(changedValue);
+        });
+      };
+
+      itClientRenders('should render a controlled text input',
+        render => testControlledField(render, 'Hello', 'Goodbye'));
+
+      itClientRenders('should render a controlled textarea',
+        render => testControlledField(render, 'Hello', 'Goodbye', 'textarea'));
+
+      itClientRenders('should render a controlled checkbox',
+        render => testControlledField(render, true, false, 'input', 'checked', {type:'checkbox'}));
+
+      itClientRenders('should render a controlled select',
+        render => testControlledField(render, 'B', 'A', 'select', 'value', {},
+          [
+            <option key="1" value="A">Option A</option>,
+            <option key="2" value="B">Option B</option>,
+          ]));
+    });
+
+    describe('user interaction with inputs before client render', function() {
+      // User interaction before client markup reconnect
+      const testFieldWithUserInteractionBeforeClientRender = (
+        element, initialValue = 'foo', changedValue = 'bar', valueKey = 'value'
+      ) => {
+        return serverRender(element).then(field => {
+          expect(field[valueKey]).toBe(initialValue);
+
+          // simulate a user typing in the field **before** client-side reconnect happens.
+          field[valueKey] = changedValue;
+
+          // reconnect to the server markup.
+          return renderIntoDom(element, field.parentNode).then(clientField => {
+            // verify that the input field was not replaced.
+            expect(clientField).toBe(field);
+            expect(clientField[valueKey]).toBe(changedValue);
+          });
+        });
+      };
+
+      it('should not blow away user-entered text on successful reconnect to an uncontrolled input', () => {
+        return testFieldWithUserInteractionBeforeClientRender(<input defaultValue="foo"/>, 'foo', 'bar');
+      });
+
+      it('should not blow away user-entered text on successful reconnect to a controlled input', () => {
+        let changeCount = 0;
+        const Component = getControlledFieldClass('foo', () => changeCount++);
+        return testFieldWithUserInteractionBeforeClientRender(<Component/>, 'foo', 'bar')
+          .then(() => expect(changeCount).toBe(0));
+      });
+
+      it('should not blow away user-entered text on successful reconnect to an uncontrolled checkbox', () => {
+        return testFieldWithUserInteractionBeforeClientRender(
+          <input type="checkbox" defaultChecked={true}/>, true, false, 'checked'
+        );
+      });
+
+      it('should not blow away user-entered text on successful reconnect to a controlled checkbox', () => {
+        let changeCount = 0;
+        const Component = getControlledFieldClass(true, () => changeCount++, 'input', 'checked', {type: 'checkbox'});
+        return testFieldWithUserInteractionBeforeClientRender(<Component/>, true, false, 'checked')
+          .then(() => expect(changeCount).toBe(0));
+      });
+
+      it('should not blow away user-entered text on successful reconnect to an uncontrolled textarea', () => {
+        return testFieldWithUserInteractionBeforeClientRender(<textarea defaultValue="foo"/>, 'foo', 'bar', 'textContent');
+      });
+
+      it('should not blow away user-entered text on successful reconnect to a controlled textarea', () => {
+        let changeCount = 0;
+        const Component = getControlledFieldClass('foo', () => changeCount++, 'textarea', 'value');
+        return testFieldWithUserInteractionBeforeClientRender(<Component/>, 'foo', 'bar', 'textContent')
+          .then(() => expect(changeCount).toBe(0));
+      });
+    });
   });
 });
