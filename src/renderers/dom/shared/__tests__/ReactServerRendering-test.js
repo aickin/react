@@ -1575,7 +1575,8 @@ describe('ReactDOMServer', () => {
       });
 
       it('should not blow away user-entered text on successful reconnect to an uncontrolled textarea', () => {
-        return testFieldWithUserInteractionBeforeClientRender(<textarea defaultValue="foo"/>, 'foo', 'bar', 'textContent');
+        return testFieldWithUserInteractionBeforeClientRender(
+          <textarea defaultValue="foo"/>, 'foo', 'bar', 'textContent');
       });
 
       it('should not blow away user-entered text on successful reconnect to a controlled textarea', () => {
