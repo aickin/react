@@ -168,6 +168,10 @@ function expectMarkupMatch(serverElement, clientElement, errorCount = 0) {
   return testMarkupMatch(serverElement, clientElement, true, errorCount);
 }
 
+function expectMarkupMismatch(serverElement, clientElement, errorCount = 0) {
+  return testMarkupMatch(serverElement, clientElement, false, errorCount);
+}
+
 function resetModules() {
   jest.resetModuleRegistry();
   React = require('React');
@@ -1879,6 +1883,150 @@ describe('ReactDOMServer', () => {
       });
     });
 
+  });
+  describe('reconnecting to server markup', function() {
+    var EmptyComponent;
+    beforeEach(() => {
+      EmptyComponent = class extends React.Component {
+        render() {
+          return null;
+        }
+      };
+    });
+
+    describe('elements', function() {
+      describe('reconnecting different component implementations', function() {
+        let ES6ClassComponent, CreateClassComponent, PureComponent, bareElement;
+        beforeEach(() => {
+          // try each type of component on client and server.
+          ES6ClassComponent = class extends React.Component {
+            render() {
+              return <div id={this.props.id}/>;
+            }
+          };
+          CreateClassComponent = React.createClass({
+            render: function() {
+              return <div id={this.props.id}/>;
+            },
+          });
+          PureComponent = (props) => <div id={props.id}/>;
+          bareElement = <div id="foobarbaz"/>;
+        });
+
+        it('ES6 Class ==> ES6 Class', () =>
+          expectMarkupMatch(<ES6ClassComponent id="foobarbaz"/>, <ES6ClassComponent id="foobarbaz"/>));
+        it('ES6 Class ==> React.createClass', () =>
+          expectMarkupMatch(<ES6ClassComponent id="foobarbaz"/>, <CreateClassComponent id="foobarbaz"/>));
+        it('ES6 Class ==> Pure Component', () =>
+          expectMarkupMatch(<ES6ClassComponent id="foobarbaz"/>, <PureComponent id="foobarbaz"/>));
+        it('ES6 Class ==> Bare Element', () =>
+          expectMarkupMatch(<ES6ClassComponent id="foobarbaz"/>, bareElement));
+
+        it('React.createClass ==> ES6 Class', () =>
+          expectMarkupMatch(<CreateClassComponent id="foobarbaz"/>, <ES6ClassComponent id="foobarbaz"/>));
+        it('React.createClass ==> React.createClass', () =>
+          expectMarkupMatch(<CreateClassComponent id="foobarbaz"/>, <CreateClassComponent id="foobarbaz"/>));
+        it('React.createClass ==> Pure Component', () =>
+          expectMarkupMatch(<CreateClassComponent id="foobarbaz"/>, <PureComponent id="foobarbaz"/>));
+        it('React.createClass ==> Bare Element', () =>
+          expectMarkupMatch(<CreateClassComponent id="foobarbaz"/>, bareElement));
+
+        it('Pure Component ==> ES6 Class', () =>
+          expectMarkupMatch(<PureComponent id="foobarbaz"/>, <ES6ClassComponent id="foobarbaz"/>));
+        it('Pure Component ==> React.createClass', () =>
+          expectMarkupMatch(<PureComponent id="foobarbaz"/>, <CreateClassComponent id="foobarbaz"/>));
+        it('Pure Component ==> Pure Component', () =>
+          expectMarkupMatch(<PureComponent id="foobarbaz"/>, <PureComponent id="foobarbaz"/>));
+        it('Pure Component ==> Bare Element', () =>
+          expectMarkupMatch(<PureComponent id="foobarbaz"/>, bareElement));
+
+        it('Bare Element ==> ES6 Class', () =>
+          expectMarkupMatch(bareElement, <ES6ClassComponent id="foobarbaz"/>));
+        it('Bare Element ==> React.createClass', () =>
+          expectMarkupMatch(bareElement, <CreateClassComponent id="foobarbaz"/>));
+        it('Bare Element ==> Pure Component', () =>
+          expectMarkupMatch(bareElement, <PureComponent id="foobarbaz"/>));
+        it('Bare Element ==> Bare Element', () =>
+          expectMarkupMatch(bareElement, bareElement));
+      });
+
+      it('should error reconnecting different element types', () => expectMarkupMismatch(<div/>, <span/>));
+      it('should error reconnecting missing attributes', () => expectMarkupMismatch(<div id="foo"/>, <div/>));
+      it('should error reconnecting added attributes', () => expectMarkupMismatch(<div/>, <div id="foo"/>));
+      it('should error reconnecting different attribute values',
+        () => expectMarkupMismatch(<div id="foo"/>, <div id="bar"/>));
+    });
+
+    describe('text nodes', function() {
+      it('should reconnect a div with text in code block & a literal',
+        () => expectMarkupMatch(<div>{'Text'}</div>, <div>Text</div>));
+      it('should reconnect a div with text in two code blocks and a literal & code block', () =>
+        expectMarkupMatch(<div>{'Text1'}{'Text2'}</div>, <div>Text1{'Text2'}</div>));
+      it('should reconnect a div with a number and string version of number', () =>
+        expectMarkupMatch(<div>{2}</div>, <div>2</div>));
+      it('should error reconnecting different text',
+        () => expectMarkupMismatch(<div>Text</div>, <div>Other Text</div>));
+      it('should error reconnecting different numbers',
+        () => expectMarkupMismatch(<div>{2}</div>, <div>{3}</div>));
+      it('should error reconnecting different number from text',
+        () => expectMarkupMismatch(<div>{2}</div>, <div>3</div>));
+      it('should error reconnecting different text in code block',
+        () => expectMarkupMismatch(<div>{'Text1'}</div>, <div>{'Text2'}</div>));
+      it('should error reconnecting different text in two code blocks', () =>
+        expectMarkupMismatch(<div>{'Text1'}{'Text2'}</div>, <div>{'Text1'}{'Text3'}</div>));
+      it('should error reconnecting a div with text in code block and literal', () =>
+        expectMarkupMismatch(<div>Text1{'Text2'}</div>, <div>Text1{'Text3'}</div>));
+      it('should error reconnecting a div with text in code block and literal 2', () =>
+        expectMarkupMismatch(<div>{'Text1'}Text2</div>, <div>{'Text1'}Text3</div>));
+    });
+
+    describe('element trees and children', function() {
+      it('should error reconnecting missing children', () => expectMarkupMismatch(<div><div/></div>, <div/>));
+      it('should error reconnecting added children', () => expectMarkupMismatch(<div/>, <div><div/></div>));
+      it('should error reconnecting more children',
+        () => expectMarkupMismatch(<div><div/></div>, <div><div/><div/></div>));
+      it('should error reconnecting fewer children',
+        () => expectMarkupMismatch(<div><div/><div/></div>, <div><div/></div>));
+      it('should error reconnecting reordered children',
+        () => expectMarkupMismatch(<div><div/><span/></div>, <div><span/><div/></div>));
+      it('should error reconnecting a div with children separated by whitespace on the client',
+          () => expectMarkupMismatch(
+            <div id="parent"><div id="child1"/><div id="child2"/></div>,
+            <div id="parent"><div id="child1"/>      <div id="child2"/></div>)); // eslint-disable-line no-multi-spaces
+      it('should error reconnecting a div with children separated by different whitespace on the server',
+        () => expectMarkupMismatch(
+          <div id="parent"><div id="child1"/>      <div id="child2"/></div>, // eslint-disable-line no-multi-spaces
+          <div id="parent"><div id="child1"/><div id="child2"/></div>));
+      it('should error reconnecting a div with children separated by different whitespace',
+          () => expectMarkupMismatch(
+            <div id="parent"><div id="child1"/> <div id="child2"/></div>,
+            <div id="parent"><div id="child1"/>      <div id="child2"/></div>)); // eslint-disable-line no-multi-spaces
+      it('can distinguish an empty component from a dom node', () =>
+        expectMarkupMismatch(<div><span/></div>, <div><EmptyComponent/></div>));
+      it('can distinguish an empty component from an empty text component', () =>
+        expectMarkupMismatch(<div><EmptyComponent/></div>, <div>{''}</div>));
+
+      it('should reconnect if component trees differ but resulting markup is the same', () => {
+        class Component1 extends React.Component {
+          render() {
+            return <span id="foobar"/>;
+          }
+        }
+        class Component2 extends React.Component {
+          render() {
+            return <span id="foobar"/>;
+          }
+        }
+        return expectMarkupMatch(<Component1/>, <Component2/>);
+      });
+    });
+
+    // Markup Mismatches: misc
+    it('should error reconnecting a div with different dangerouslySetInnerHTML', () =>
+      expectMarkupMismatch(
+        <div dangerouslySetInnerHTML={{__html:"<span id='child1'/>"}} />,
+        <div dangerouslySetInnerHTML={{__html:"<span id='child2'/>"}} />
+      ));
   });
 
 });
