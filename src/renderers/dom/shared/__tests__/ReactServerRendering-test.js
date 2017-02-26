@@ -1563,7 +1563,9 @@ describe('ReactDOMServer', () => {
           // reconnect to the server markup.
           return renderIntoDom(element, field.parentNode).then(clientField => {
             // verify that the input field was not replaced.
-            expect(clientField).toBe(field);
+            // Note that we cannot use expect(clientField).toBe(field) because
+            // of jest bug #1772
+            expect(clientField === field).toBe(true);
             expect(clientField[valueKey]).toBe(changedValue);
           });
         });
