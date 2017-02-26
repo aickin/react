@@ -1609,6 +1609,20 @@ describe('ReactDOMServer', () => {
     });
   });
 
+  describe('lifecycle', function() {
+    itRenders('should call getInitialState for createClass components', (render) => {
+      const Component = React.createClass({
+        getInitialState: function() {
+          return {text: 'foo'};
+        },
+        render: function() {
+          return <div>{this.state.text}</div>;
+        },
+      });
+      return render(<Component/>).then(e => expect(e.textContent).toBe('foo'));
+    });
+  });
+
   describe('context', function() {
     itRenders('can render context', (render) => {
       class ClassChildWithContext extends React.Component {
