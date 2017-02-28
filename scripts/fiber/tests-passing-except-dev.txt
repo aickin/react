@@ -105,11 +105,6 @@ src/renderers/__tests__/ReactComponentTreeHook-test.native.js
 * reports update counts
 * does not report top-level wrapper as a root
 
-src/renderers/__tests__/ReactCompositeComponent-test.js
-* should warn about `setState` in render
-* should warn about `setState` in getChildContext
-* should disallow nested render calls
-
 src/renderers/__tests__/ReactHostOperationHistoryHook-test.js
 * gets recorded for host roots
 * gets recorded for composite roots
@@ -132,9 +127,6 @@ src/renderers/__tests__/ReactHostOperationHistoryHook-test.js
 * gets reported when a child is inserted
 * gets reported when a child is removed
 
-src/renderers/__tests__/ReactStatelessComponent-test.js
-* should warn for childContextTypes on a functional component
-
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should not warn when server-side rendering `onScroll`
 * should warn about incorrect casing on properties (ssr)
@@ -152,3 +144,7 @@ src/renderers/dom/shared/__tests__/ReactMountDestruction-test.js
 
 src/renderers/dom/shared/__tests__/ReactServerRendering-test.js
 * should have the correct mounting behavior
+* should render a blank div with client render on top of bad server markup
+* should render a div with inline styles with client render on top of bad server markup
+* should render a self-closing tag with client render on top of bad server markup
+* should render a self-closing tag as a child with client render on top of bad server markup
