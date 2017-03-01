@@ -23,28 +23,33 @@ let ReactTestUtils;
 const TEXT_NODE_TYPE = 3;
 const COMMENT_NODE_TYPE = 8;
 
+// promisified version of ReactDOM.render()
+function asyncReactDOMRender(reactElement, domElement) {
+  return new Promise(resolve =>
+    ReactDOM.render(reactElement, domElement, resolve));
+}
+
 // performs fn asynchronously and expects count errors logged to console.error.
 // will fail the test if the count of errors logged is not equal to count.
-function expectErrors(fn, count) {
+async function expectErrors(fn, count) {
   if (console.error.calls && console.error.calls.reset) {
     console.error.calls.reset();
   } else {
     spyOn(console, 'error');
   }
 
-  return fn().then((result) => {
-    if (console.error.calls.count() !== count) {
-      console.log(`We expected ${count} warning(s), but saw ${console.error.calls.count()} warning(s).`);
-      if (console.error.calls.count() > 0) {
-        console.log(`We saw these warnings:`);
-        for (var i = 0; i < console.error.calls.count(); i++) {
-          console.log(console.error.calls.argsFor(i)[0]);
-        }
+  const result = await fn();
+  if (console.error.calls.count() !== count && console.error.calls.count() !== 0) {
+    console.log(`We expected ${count} warning(s), but saw ${console.error.calls.count()} warning(s).`);
+    if (console.error.calls.count() > 0) {
+      console.log(`We saw these warnings:`);
+      for (var i = 0; i < console.error.calls.count(); i++) {
+        console.log(console.error.calls.argsFor(i)[0]);
       }
     }
-    expectDev(console.error.calls.count()).toBe(count);
-    return result;
-  });
+  }
+  expectDev(console.error.calls.count()).toBe(count);
+  return result;
 }
 
 function itRejects(desc, testFn) {
@@ -59,13 +64,12 @@ function itRejects(desc, testFn) {
 // returns a Promise that resolves when the render is complete.
 function renderIntoDom(reactElement, domElement, errorCount = 0) {
   return expectErrors(
-    () => new Promise((resolve) => {
+    async () => {
       ExecutionEnvironment.canUseDOM = true;
-      ReactDOM.render(reactElement, domElement, () => {
-        ExecutionEnvironment.canUseDOM = false;
-        resolve(domElement.firstChild);
-      });
-    }),
+      await asyncReactDOMRender(reactElement, domElement);
+      ExecutionEnvironment.canUseDOM = false;
+      return domElement.firstChild;
+    },
     errorCount
   );
 }
@@ -73,15 +77,13 @@ function renderIntoDom(reactElement, domElement, errorCount = 0) {
 // Renders text using SSR and then stuffs it into a DOM node; returns the DOM
 // element that corresponds with the reactElement.
 // Does not render on client or perform client-side revival.
-function serverRender(reactElement, errorCount = 0) {
-  return expectErrors(
+async function serverRender(reactElement, errorCount = 0) {
+  const markup = await expectErrors(
     () => new Promise(resolve => resolve(ReactDOMServer.renderToString(reactElement))),
-    errorCount)
-  .then((markup) => {
-    var domElement = document.createElement('div');
-    domElement.innerHTML = markup;
-    return domElement.firstChild;
-  });
+    errorCount);
+  var domElement = document.createElement('div');
+  domElement.innerHTML = markup;
+  return domElement.firstChild;
 }
 
 const clientCleanRender = (element, errorCount = 0) => {
@@ -89,13 +91,12 @@ const clientCleanRender = (element, errorCount = 0) => {
   return renderIntoDom(element, div, errorCount);
 };
 
-const clientRenderOnServerString = (element, errorCount = 0) => {
-  return serverRender(element, errorCount).then((markup) => {
-    resetModules();
-    var domElement = document.createElement('div');
-    domElement.innerHTML = markup;
-    return renderIntoDom(element, domElement, errorCount);
-  });
+const clientRenderOnServerString = async (element, errorCount = 0) => {
+  const markup = await serverRender(element, errorCount);
+  resetModules();
+  var domElement = document.createElement('div');
+  domElement.innerHTML = markup;
+  return renderIntoDom(element, domElement, errorCount);
 };
 
 const clientRenderOnBadMarkup = (element, errorCount = 0) => {
@@ -192,157 +193,159 @@ describe('ReactDOMServerIntegration', () => {
   });
 
   describe('basic rendering', function() {
-    itRenders('a blank div', render =>
-      render(<div />).then(e => expect(e.tagName).toBe('DIV')));
+    itRenders('a blank div', async render => {
+      const e = await render(<div />);
+      expect(e.tagName).toBe('DIV');
+    });
 
-    itRenders('a div with inline styles', render =>
-      render(<div style={{color:'red', width:'30px'}} />).then(e => {
-        expect(e.style.color).toBe('red');
-        expect(e.style.width).toBe('30px');
-      })
-    );
+    itRenders('a div with inline styles', async render => {
+      const e = await render(<div style={{color:'red', width:'30px'}} />);
+      expect(e.style.color).toBe('red');
+      expect(e.style.width).toBe('30px');
+    });
 
-    itRenders('a self-closing tag', render =>
-      render(<br />).then(e => expect(e.tagName).toBe('BR')));
+    itRenders('a self-closing tag', async render => {
+      const e = await render(<br />);
+      expect(e.tagName).toBe('BR');
+    });
 
-    itRenders('a self-closing tag as a child', render =>
-      render(<div><br /></div>).then(e => {
-        expect(e.childNodes.length).toBe(1);
-        expect(e.firstChild.tagName).toBe('BR');
-      })
-    );
+    itRenders('a self-closing tag as a child', async render => {
+      const e = await render(<div><br /></div>);
+      expect(e.childNodes.length).toBe(1);
+      expect(e.firstChild.tagName).toBe('BR');
+    });
   });
 
   describe('property to attribute mapping', function() {
     describe('string properties', function() {
       itRenders('renders simple numbers', (render) => {
-        return render(<div width={30}/>).then(e => expect(e.getAttribute('width')).toBe('30'));
+        return render(<div width={30} />).then(e => expect(e.getAttribute('width')).toBe('30'));
       });
 
       itRenders('renders simple strings', (render) => {
-        return render(<div width={'30'}/>).then(e => expect(e.getAttribute('width')).toBe('30'));
+        return render(<div width={'30'} />).then(e => expect(e.getAttribute('width')).toBe('30'));
       });
 
       // this seems like it might mask programmer error, but it's existing behavior.
       itRenders('renders string prop with true value', render =>
-        render(<a href={true}/>).then(e => expect(e.getAttribute('href')).toBe('true')));
+        render(<a href={true} />).then(e => expect(e.getAttribute('href')).toBe('true')));
 
       // this seems like it might mask programmer error, but it's existing behavior.
       itRenders('renders string prop with false value', render =>
-        render(<a href={false}/>).then(e => expect(e.getAttribute('href')).toBe('false')));
+        render(<a href={false} />).then(e => expect(e.getAttribute('href')).toBe('false')));
 
       // this seems like somewhat odd behavior, as it isn't how <a html> works
       // in HTML, but it's existing behavior.
       itRenders('renders string prop with true value', render =>
         /* eslint-disable react/jsx-boolean-value */
-        render(<a href/>).then(e => expect(e.getAttribute('href')).toBe('true')));
+        render(<a href />).then(e => expect(e.getAttribute('href')).toBe('true')));
         /* eslint-enable react/jsx-boolean-value */
     });
 
     describe('boolean properties', function() {
       itRenders('renders boolean prop with true value', render =>
-        render(<div hidden={true}/>).then(e => expect(e.getAttribute('hidden')).toBe('')));
+        render(<div hidden={true} />).then(e => expect(e.getAttribute('hidden')).toBe('')));
 
       itRenders('renders boolean prop with false value', render =>
-        render(<div hidden={false}/>).then(e => expect(e.getAttribute('hidden')).toBe(null)));
+        render(<div hidden={false} />).then(e => expect(e.getAttribute('hidden')).toBe(null)));
 
       itRenders('renders boolean prop with missing value', render => {
         /* eslint-disable react/jsx-boolean-value */
-        return render(<div hidden/>).then(e => expect(e.getAttribute('hidden')).toBe(''));
+        return render(<div hidden />).then(e => expect(e.getAttribute('hidden')).toBe(''));
         /* eslint-enable react/jsx-boolean-value */
       });
 
       itRenders('renders boolean prop with self value', render => {
-        return render(<div hidden="hidden"/>).then(e => expect(e.getAttribute('hidden')).toBe(''));
+        return render(<div hidden="hidden" />).then(e => expect(e.getAttribute('hidden')).toBe(''));
       });
 
       // this does not seem like correct behavior, since hidden="" in HTML indicates
       // that the boolean property is present. however, it is how the current code
       // behaves, so the test is included here.
       itRenders('renders boolean prop with "" value', render =>
-        render(<div hidden=""/>).then(e => expect(e.getAttribute('hidden')).toBe(null)));
+        render(<div hidden="" />).then(e => expect(e.getAttribute('hidden')).toBe(null)));
 
       // this seems like it might mask programmer error, but it's existing behavior.
       itRenders('renders boolean prop with string value', render =>
-        render(<div hidden="foo"/>).then(e => expect(e.getAttribute('hidden')).toBe('')));
+        render(<div hidden="foo" />).then(e => expect(e.getAttribute('hidden')).toBe('')));
 
       // this seems like it might mask programmer error, but it's existing behavior.
       itRenders('renders boolean prop with array value', render =>
-        render(<div hidden={['foo', 'bar']}/>).then(e => expect(e.getAttribute('hidden')).toBe('')));
+        render(<div hidden={['foo', 'bar']} />).then(e => expect(e.getAttribute('hidden')).toBe('')));
 
       // this seems like it might mask programmer error, but it's existing behavior.
       itRenders('renders boolean prop with object value', render =>
-        render(<div hidden={{foo:'bar'}}/>).then(e => expect(e.getAttribute('hidden')).toBe('')));
+        render(<div hidden={{foo:'bar'}} />).then(e => expect(e.getAttribute('hidden')).toBe('')));
 
       // this seems like it might mask programmer error, but it's existing behavior.
       itRenders('renders boolean prop with non-zero number value', render =>
-        render(<div hidden={10}/>).then(e => expect(e.getAttribute('hidden')).toBe('')));
+        render(<div hidden={10} />).then(e => expect(e.getAttribute('hidden')).toBe('')));
 
       // this seems like it might mask programmer error, but it's existing behavior.
       itRenders('renders boolean prop with zero value', render =>
-        render(<div hidden={0}/>).then(e => expect(e.getAttribute('hidden')).toBe(null)));
+        render(<div hidden={0} />).then(e => expect(e.getAttribute('hidden')).toBe(null)));
     });
 
     describe('download property (combined boolean/string attribute)', function() {
       itRenders('handles download prop with true value', render =>
-        render(<a download={true}/>).then(e => expect(e.getAttribute('download')).toBe('')));
+        render(<a download={true} />).then(e => expect(e.getAttribute('download')).toBe('')));
 
       itRenders('handles download prop with false value', render =>
-        render(<a download={false}/>).then(e => expect(e.getAttribute('download')).toBe(null)));
+        render(<a download={false} />).then(e => expect(e.getAttribute('download')).toBe(null)));
 
       itRenders('handles download prop with no value', render =>
         /* eslint-disable react/jsx-boolean-value */
-        render(<a download/>).then(e => expect(e.getAttribute('download')).toBe('')));
+        render(<a download />).then(e => expect(e.getAttribute('download')).toBe('')));
         /* eslint-enable react/jsx-boolean-value */
 
       itRenders('handles download prop with string value', render =>
-        render(<a download="myfile"/>).then(e => expect(e.getAttribute('download')).toBe('myfile')));
+        render(<a download="myfile" />).then(e => expect(e.getAttribute('download')).toBe('myfile')));
 
       itRenders('handles download prop with string "true" value', render =>
-        render(<a download={'true'}/>).then(e => expect(e.getAttribute('download')).toBe('true')));
+        render(<a download={'true'} />).then(e => expect(e.getAttribute('download')).toBe('true')));
     });
 
     describe('className property', function() {
       itRenders('renders className prop with string value', render =>
-        render(<div className="myClassName"/>).then(e => expect(e.getAttribute('class')).toBe('myClassName')));
+        render(<div className="myClassName" />).then(e => expect(e.getAttribute('class')).toBe('myClassName')));
 
       itRenders('renders className prop with empty string value', render =>
-        render(<div className=""/>).then(e => expect(e.getAttribute('class')).toBe('')));
+        render(<div className="" />).then(e => expect(e.getAttribute('class')).toBe('')));
 
       // this probably is just masking programmer error, but it is existing behavior.
       itRenders('renders className prop with true value', render =>
-        render(<div className={true}/>).then(e => expect(e.getAttribute('class')).toBe('true')));
+        render(<div className={true} />).then(e => expect(e.getAttribute('class')).toBe('true')));
 
       // this probably is just masking programmer error, but it is existing behavior.
       itRenders('renders className prop with false value', render =>
-        render(<div className={false}/>).then(e => expect(e.getAttribute('class')).toBe('false')));
+        render(<div className={false} />).then(e => expect(e.getAttribute('class')).toBe('false')));
 
       // this probably is just masking programmer error, but it is existing behavior.
       /* eslint-disable react/jsx-boolean-value */
       itRenders('renders className prop with false value', render =>
-        render(<div className/>).then(e => expect(e.getAttribute('class')).toBe('true')));
+        render(<div className />).then(e => expect(e.getAttribute('class')).toBe('true')));
       /* eslint-enable react/jsx-boolean-value */
     });
 
     describe('htmlFor property', function() {
       itRenders('renders htmlFor with string value', render =>
-        render(<div htmlFor="myFor"/>).then(e => expect(e.getAttribute('for')).toBe('myFor')));
+        render(<div htmlFor="myFor" />).then(e => expect(e.getAttribute('for')).toBe('myFor')));
 
       itRenders('renders htmlFor with an empty string', render =>
-        render(<div htmlFor=""/>).then(e => expect(e.getAttribute('for')).toBe('')));
+        render(<div htmlFor="" />).then(e => expect(e.getAttribute('for')).toBe('')));
 
       // this probably is just masking programmer error, but it is existing behavior.
       itRenders('renders className prop with true value', render =>
-        render(<div htmlFor={true}/>).then(e => expect(e.getAttribute('for')).toBe('true')));
+        render(<div htmlFor={true} />).then(e => expect(e.getAttribute('for')).toBe('true')));
 
       // this probably is just masking programmer error, but it is existing behavior.
       itRenders('renders className prop with false value', render =>
-        render(<div htmlFor={false}/>).then(e => expect(e.getAttribute('for')).toBe('false')));
+        render(<div htmlFor={false} />).then(e => expect(e.getAttribute('for')).toBe('false')));
 
       // this probably is just masking programmer error, but it is existing behavior.
       /* eslint-disable react/jsx-boolean-value */
       itRenders('renders className prop with false value', render =>
-        render(<div htmlFor/>).then(e => expect(e.getAttribute('for')).toBe('true')));
+        render(<div htmlFor />).then(e => expect(e.getAttribute('for')).toBe('true')));
       /* eslint-enable react/jsx-boolean-value */
 
     });
@@ -351,42 +354,42 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('does not render ref property as an attribute', render => {
         class RefComponent extends React.Component {
           render() {
-            return <div ref="foo"/>;
+            return <div ref="foo" />;
           }
         }
-        return render(<RefComponent/>).then(e => expect(e.getAttribute('ref')).toBe(null));
+        return render(<RefComponent />).then(e => expect(e.getAttribute('ref')).toBe(null));
       });
 
       itRenders('does not render children property as an attribute', render =>
         render(React.createElement('div', {}, 'foo')).then(e => expect(e.getAttribute('children')).toBe(null)));
 
       itRenders('does not render key property as an attribute', render =>
-        render(<div key="foo"/>).then(e => expect(e.getAttribute('key')).toBe(null)));
+        render(<div key="foo" />).then(e => expect(e.getAttribute('key')).toBe(null)));
 
       itRenders('does not render dangerouslySetInnerHTML as an attribute', render =>
-        render(<div dangerouslySetInnerHTML={{__html:'foo'}}/>)
+        render(<div dangerouslySetInnerHTML={{__html:'foo'}} />)
           .then(e => expect(e.getAttribute('dangerouslySetInnerHTML')).toBe(null)));
     });
 
     describe('unknown attributes', function() {
       itRenders('does not render unknown attributes', render =>
-        render(<div foo="bar"/>, 1).then(e => expect(e.getAttribute('foo')).toBe(null)));
+        render(<div foo="bar" />, 1).then(e => expect(e.getAttribute('foo')).toBe(null)));
 
       itRenders('does render unknown data- attributes', render =>
-        render(<div data-foo="bar"/>).then(e => expect(e.getAttribute('data-foo')).toBe('bar')));
+        render(<div data-foo="bar" />).then(e => expect(e.getAttribute('data-foo')).toBe('bar')));
 
       itRenders('does not render unknown attributes for non-standard elements', render =>
-        render(<nonstandard foo="bar"/>, 1).then(e => expect(e.getAttribute('foo')).toBe(null)));
+        render(<nonstandard foo="bar" />, 1).then(e => expect(e.getAttribute('foo')).toBe(null)));
 
       itRenders('does render unknown attributes for custom elements', render =>
-        render(<custom-element foo="bar"/>).then(e => expect(e.getAttribute('foo')).toBe('bar')));
+        render(<custom-element foo="bar" />).then(e => expect(e.getAttribute('foo')).toBe('bar')));
 
       itRenders('does render unknown attributes for custom elements using is', render =>
-        render(<div is="custom-element" foo="bar"/>).then(e => expect(e.getAttribute('foo')).toBe('bar')));
+        render(<div is="custom-element" foo="bar" />).then(e => expect(e.getAttribute('foo')).toBe('bar')));
     });
 
     itRenders('does not render HTML events', render =>
-      render(<div onClick={() => {}}/>).then(e => {
+      render(<div onClick={() => {}} />).then(e => {
         expect(e.getAttribute('onClick')).toBe(null);
         expect(e.getAttribute('onClick')).toBe(null);
         expect(e.getAttribute('click')).toBe(null);
@@ -527,12 +530,12 @@ describe('ReactDOMServerIntegration', () => {
         render => render(<div>{undefined}</div>).then(e => expect(e.childNodes.length).toBe(0)));
       itRenders('renders a null component as empty', (render) => {
         const NullComponent = () => null;
-        return render(<NullComponent/>).then(e => expectEmptyNode(e));
+        return render(<NullComponent />).then(e => expectEmptyNode(e));
       });
 
       itRenders('renders a null component children as empty', (render) => {
         const NullComponent = () => null;
-        return render(<div><NullComponent/></div>).then(e => {
+        return render(<div><NullComponent /></div>).then(e => {
           expect(e.childNodes.length).toBe(1);
           expectEmptyNode(e.firstChild);
         });
@@ -573,13 +576,13 @@ describe('ReactDOMServerIntegration', () => {
 
     describe('elements with implicit namespaces', function() {
       itRenders('renders an svg element', render =>
-        render(<svg/>).then(e => {
+        render(<svg />).then(e => {
           expect(e.childNodes.length).toBe(0);
           expect(e.tagName.toLowerCase()).toBe('svg');
           expect(e.namespaceURI).toBe('http://www.w3.org/2000/svg');
         }));
       itRenders('renders svg element with an xlink', render =>
-        render(<svg><image xlinkHref="http://i.imgur.com/w7GCRPb.png"/></svg>).then(e => {
+        render(<svg><image xlinkHref="http://i.imgur.com/w7GCRPb.png" /></svg>).then(e => {
           e = e.firstChild;
           expect(e.childNodes.length).toBe(0);
           expect(e.tagName.toLowerCase()).toBe('image');
@@ -587,7 +590,7 @@ describe('ReactDOMServerIntegration', () => {
           expect(e.getAttributeNS('http://www.w3.org/1999/xlink', 'href')).toBe('http://i.imgur.com/w7GCRPb.png');
         }));
       itRenders('renders a math element', render =>
-        render(<math/>).then(e => {
+        render(<math />).then(e => {
           expect(e.childNodes.length).toBe(0);
           expect(e.tagName.toLowerCase()).toBe('math');
           expect(e.namespaceURI).toBe('http://www.w3.org/1998/Math/MathML');
@@ -596,20 +599,20 @@ describe('ReactDOMServerIntegration', () => {
     // specially wrapped components
     // (see the big switch near the beginning ofReactDOMComponent.mountComponent)
     itRenders('renders an img', render =>
-      render(<img/>).then(e => {
+      render(<img />).then(e => {
         expect(e.childNodes.length).toBe(0);
         expect(e.nextSibling).toBe(null);
         expect(e.tagName.toLowerCase()).toBe('img');
       }));
     itRenders('renders a button', render =>
-      render(<button/>).then(e => {
+      render(<button />).then(e => {
         expect(e.childNodes.length).toBe(0);
         expect(e.nextSibling).toBe(null);
         expect(e.tagName.toLowerCase()).toBe('button');
       }));
 
     itRenders('renders a div with dangerouslySetInnerHTML',
-      render => render(<div dangerouslySetInnerHTML={{__html:"<span id='child'/>"}}/>).then(e => {
+      render => render(<div dangerouslySetInnerHTML={{__html:"<span id='child'/>"}} />).then(e => {
         expect(e.childNodes.length).toBe(1);
         expect(e.firstChild.tagName.toLowerCase()).toBe('span');
         expect(e.firstChild.getAttribute('id')).toBe('child');
@@ -633,7 +636,7 @@ describe('ReactDOMServerIntegration', () => {
 
       itRenders('renders stateless components', render => {
         const StatelessComponent = () => <div>foo</div>;
-        return render(<StatelessComponent/>).then(checkFooDiv);
+        return render(<StatelessComponent />).then(checkFooDiv);
       });
 
       itRenders('renders React.createClass components', render => {
@@ -642,7 +645,7 @@ describe('ReactDOMServerIntegration', () => {
             return <div>foo</div>;
           },
         });
-        return render(<RccComponent/>).then(checkFooDiv);
+        return render(<RccComponent />).then(checkFooDiv);
       });
 
       itRenders('renders ES6 class components', render => {
@@ -651,7 +654,7 @@ describe('ReactDOMServerIntegration', () => {
             return <div>foo</div>;
           }
         }
-        return render(<ClassComponent/>).then(checkFooDiv);
+        return render(<ClassComponent />).then(checkFooDiv);
       });
 
       itRenders('renders factory components', render => {
@@ -662,7 +665,7 @@ describe('ReactDOMServerIntegration', () => {
             },
           };
         };
-        return render(<FactoryComponent/>).then(checkFooDiv);
+        return render(<FactoryComponent />).then(checkFooDiv);
       });
     });
 
@@ -673,7 +676,7 @@ describe('ReactDOMServerIntegration', () => {
           <Component>
             <Component>
               <Component>
-                <Component/>
+                <Component />
               </Component>
             </Component>
           </Component>)
@@ -693,10 +696,10 @@ describe('ReactDOMServerIntegration', () => {
         return render(
           <Component>
             <Component>
-              <Component/><Component/>
+              <Component /><Component />
             </Component>
             <Component>
-              <Component/><Component/>
+              <Component /><Component />
             </Component>
           </Component>)
           .then(element => {
@@ -716,14 +719,14 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('renders a div with a child', render =>
-        render(<div id="parent"><div id="child"/></div>).then(e => {
+        render(<div id="parent"><div id="child" /></div>).then(e => {
           expect(e.id).toBe('parent');
           expect(e.childNodes.length).toBe(1);
           expect(e.childNodes[0].id).toBe('child');
           expect(e.childNodes[0].childNodes.length).toBe(0);
         }));
       itRenders('renders a div with multiple children', render =>
-        render(<div id="parent"><div id="child1"/><div id="child2"/></div>).then(e => {
+        render(<div id="parent"><div id="child1" /><div id="child2" /></div>).then(e => {
           expect(e.id).toBe('parent');
           expect(e.childNodes.length).toBe(2);
           expect(e.childNodes[0].id).toBe('child1');
@@ -732,7 +735,7 @@ describe('ReactDOMServerIntegration', () => {
           expect(e.childNodes[1].childNodes.length).toBe(0);
         }));
       itRenders('renders a div with multiple children separated by whitespace', render =>
-        render(<div id="parent"><div id="child1"/> <div id="child2"/></div>).then(e => {
+        render(<div id="parent"><div id="child1" /> <div id="child2" /></div>).then(e => {
           expect(e.id).toBe('parent');
           expect(e.childNodes.length).toBe(5);
           expect(e.childNodes[0].id).toBe('child1');
@@ -742,7 +745,7 @@ describe('ReactDOMServerIntegration', () => {
           expect(e.childNodes[4].childNodes.length).toBe(0);
         }));
       itRenders('renders a div with a child surrounded by whitespace', render =>
-        render(<div id="parent">  <div id="child"/>   </div>).then(e => { // eslint-disable-line no-multi-spaces
+        render(<div id="parent">  <div id="child" />   </div>).then(e => { // eslint-disable-line no-multi-spaces
           expect(e.id).toBe('parent');
           expect(e.childNodes.length).toBe(7);
           expectTextNode(e.childNodes[0], '  ');
@@ -772,17 +775,17 @@ describe('ReactDOMServerIntegration', () => {
     describe('components that throw errors', function() {
       itThrowsOnRender('throws rendering a string component', (render) => {
         const StringComponent = () => 'foo';
-        return render(<StringComponent/>, 1);
+        return render(<StringComponent />, 1);
       });
 
       itThrowsOnRender('throws rendering an undefined component', (render) => {
         const UndefinedComponent = () => undefined;
-        return render(<UndefinedComponent/>, 1);
+        return render(<UndefinedComponent />, 1);
       });
 
       itThrowsOnRender('throws rendering a number component', (render) => {
         const NumberComponent = () => 54;
-        return render(<NumberComponent/>, 1);
+        return render(<NumberComponent />, 1);
       });
 
       itThrowsOnRender('throws when rendering null', render => render(null));
@@ -797,27 +800,27 @@ describe('ReactDOMServerIntegration', () => {
     describe('inputs', function() {
       itRenders('can render an input with a value', (render) => {
         return Promise.all([
-          render(<input value="foo" onChange={() => {}}/>).then(e =>
+          render(<input value="foo" onChange={() => {}} />).then(e =>
             expect(e.getAttribute('value') || e.value).toBe('foo')),
-          render(<input value="foo" readOnly={true}/>).then(e =>
+          render(<input value="foo" readOnly={true} />).then(e =>
             expect(e.getAttribute('value') || e.value).toBe('foo')),
         ]);
       });
 
       itRenders('can render an input with a value and no onChange/readOnly', render => {
-        return render(<input value="foo"/>, 1)
+        return render(<input value="foo" />, 1)
           .then(element => expect(element.getAttribute('value') || element.value).toBe('foo'));
       });
 
       itRenders('can render an input with a defaultValue', (render) => {
-        return render(<input defaultValue="foo"/>).then(e => {
+        return render(<input defaultValue="foo" />).then(e => {
           expect(e.getAttribute('value') || e.value).toBe('foo');
           expect(e.getAttribute('defaultValue')).toBe(null);
         });
       });
 
       itRenders('can render an input with both a value and defaultValue part 1', render => {
-        return render(<input value="foo" defaultValue="bar" readOnly={true}/>, 1)
+        return render(<input value="foo" defaultValue="bar" readOnly={true} />, 1)
           .then(element => {
             expect(element.getAttribute('value') || element.value).toBe('foo');
             expect(element.getAttribute('defaultValue')).toBe(null);
@@ -825,7 +828,7 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('can render an input with both a value and defaultValue part 2', render => {
-        return render(<input defaultValue="bar" value="foo" readOnly={true}/>, 1)
+        return render(<input defaultValue="bar" value="foo" readOnly={true} />, 1)
           .then(element => {
             expect(element.getAttribute('value') || element.value).toBe('foo');
             expect(element.getAttribute('defaultValue')).toBe(null);
@@ -836,27 +839,27 @@ describe('ReactDOMServerIntegration', () => {
     describe('checkboxes', function() {
       itRenders('can render a checkbox that is checked', (render) => {
         return Promise.all([
-          render(<input type="checkbox" checked={true} onChange={() => {}}/>)
+          render(<input type="checkbox" checked={true} onChange={() => {}} />)
             .then(e => expect(e.checked).toBe(true)),
-          render(<input type="checkbox" checked={true} readOnly={true}/>)
+          render(<input type="checkbox" checked={true} readOnly={true} />)
             .then(e => expect(e.checked).toBe(true)),
         ]);
       });
 
       itRenders('can render a checkbox that is checked and no onChange/readOnly', render => {
-        return render(<input type="checkbox" checked={true}/>, 1)
+        return render(<input type="checkbox" checked={true} />, 1)
           .then(element => expect(element.checked).toBe(true));
       });
 
       itRenders('can render a checkbox with defaultChecked', (render) => {
-        return render(<input type="checkbox" defaultChecked={true}/>).then(e => {
+        return render(<input type="checkbox" defaultChecked={true} />).then(e => {
           expect(e.checked).toBe(true);
           expect(e.getAttribute('defaultChecked')).toBe(null);
         });
       });
 
       itRenders('can render a checkbox with both a checked and defaultChecked part 1', render => {
-        return render(<input type="checkbox" checked={true} defaultChecked={false} readOnly={true}/>, 1)
+        return render(<input type="checkbox" checked={true} defaultChecked={false} readOnly={true} />, 1)
           .then(element => {
             expect(element.checked).toBe(true);
             expect(element.getAttribute('defaultChecked')).toBe(null);
@@ -864,7 +867,7 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('can render a checkbox with both a checked and defaultChecked part 2', render => {
-        return render(<input type="checkbox" defaultChecked={false} checked={true} readOnly={true}/>, 1)
+        return render(<input type="checkbox" defaultChecked={false} checked={true} readOnly={true} />, 1)
           .then(element => {
             expect(element.checked).toBe(true);
             expect(element.getAttribute('defaultChecked')).toBe(null);
@@ -877,11 +880,11 @@ describe('ReactDOMServerIntegration', () => {
       // ---------
       itRenders('can render a textarea with a value', (render) => {
         return Promise.all([
-          render(<textarea value="foo" onChange={() => {}}/>).then(e => {
+          render(<textarea value="foo" onChange={() => {}} />).then(e => {
             expect(e.getAttribute('value')).toBe(null);
             expect(e.value).toBe('foo');
           }),
-          render(<textarea value="foo" readOnly={true}/>).then(e => {
+          render(<textarea value="foo" readOnly={true} />).then(e => {
             expect(e.getAttribute('value')).toBe(null);
             expect(e.value).toBe('foo');
           }),
@@ -889,7 +892,7 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('can render a textarea with a value and no onChange/readOnly', render => {
-        return render(<textarea value="foo"/>, 1)
+        return render(<textarea value="foo" />, 1)
           .then(element => {
             expect(element.getAttribute('value')).toBe(null);
             expect(element.value).toBe('foo');
@@ -897,7 +900,7 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('can render a textarea with a defaultValue', (render) => {
-        return render(<textarea defaultValue="foo"/>).then(e => {
+        return render(<textarea defaultValue="foo" />).then(e => {
           expect(e.getAttribute('value')).toBe(null);
           expect(e.getAttribute('defaultValue')).toBe(null);
           expect(e.value).toBe('foo');
@@ -905,7 +908,7 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('can render a textarea with both a value and defaultValue part 1', render => {
-        return render(<textarea value="foo" defaultValue="bar" readOnly={true}/>, 1)
+        return render(<textarea value="foo" defaultValue="bar" readOnly={true} />, 1)
           .then(element => {
             expect(element.getAttribute('value')).toBe(null);
             expect(element.getAttribute('defaultValue')).toBe(null);
@@ -914,7 +917,7 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('can render a textarea with both a value and defaultValue part 2', render => {
-        return render(<textarea defaultValue="bar" value="foo" readOnly={true}/>, 1)
+        return render(<textarea defaultValue="bar" value="foo" readOnly={true} />, 1)
           .then(element => {
             expect(element.getAttribute('value')).toBe(null);
             expect(element.getAttribute('defaultValue')).toBe(null);
@@ -1006,7 +1009,7 @@ describe('ReactDOMServerIntegration', () => {
           initialValue, () => changeCount++, TagName, valueKey, extraProps, children
         );
 
-        return render(<ControlledField/>).then(e => {
+        return render(<ControlledField />).then(e => {
           expect(changeCount).toBe(0);
           expect(e[valueKey]).toBe(initialValue);
 
@@ -1059,38 +1062,38 @@ describe('ReactDOMServerIntegration', () => {
       };
 
       it('should not blow away user-entered text on successful reconnect to an uncontrolled input', () => {
-        return testFieldWithUserInteractionBeforeClientRender(<input defaultValue="foo"/>, 'foo', 'bar');
+        return testFieldWithUserInteractionBeforeClientRender(<input defaultValue="foo" />, 'foo', 'bar');
       });
 
       it('should not blow away user-entered text on successful reconnect to a controlled input', () => {
         let changeCount = 0;
         const Component = getControlledFieldClass('foo', () => changeCount++);
-        return testFieldWithUserInteractionBeforeClientRender(<Component/>, 'foo', 'bar')
+        return testFieldWithUserInteractionBeforeClientRender(<Component />, 'foo', 'bar')
           .then(() => expect(changeCount).toBe(0));
       });
 
       it('should not blow away user-entered text on successful reconnect to an uncontrolled checkbox', () => {
         return testFieldWithUserInteractionBeforeClientRender(
-          <input type="checkbox" defaultChecked={true}/>, true, false, 'checked'
+          <input type="checkbox" defaultChecked={true} />, true, false, 'checked'
         );
       });
 
       it('should not blow away user-entered text on successful reconnect to a controlled checkbox', () => {
         let changeCount = 0;
         const Component = getControlledFieldClass(true, () => changeCount++, 'input', 'checked', {type: 'checkbox'});
-        return testFieldWithUserInteractionBeforeClientRender(<Component/>, true, false, 'checked')
+        return testFieldWithUserInteractionBeforeClientRender(<Component />, true, false, 'checked')
           .then(() => expect(changeCount).toBe(0));
       });
 
       it('should not blow away user-entered text on successful reconnect to an uncontrolled textarea', () => {
         return testFieldWithUserInteractionBeforeClientRender(
-          <textarea defaultValue="foo"/>, 'foo', 'bar', 'textContent');
+          <textarea defaultValue="foo" />, 'foo', 'bar', 'textContent');
       });
 
       it('should not blow away user-entered text on successful reconnect to a controlled textarea', () => {
         let changeCount = 0;
         const Component = getControlledFieldClass('foo', () => changeCount++, 'textarea', 'value');
-        return testFieldWithUserInteractionBeforeClientRender(<Component/>, 'foo', 'bar', 'textContent')
+        return testFieldWithUserInteractionBeforeClientRender(<Component />, 'foo', 'bar', 'textContent')
           .then(() => expect(changeCount).toBe(0));
       });
     });
@@ -1106,7 +1109,7 @@ describe('ReactDOMServerIntegration', () => {
           return <div>{this.state.text}</div>;
         },
       });
-      return render(<Component/>).then(e => expect(e.textContent).toBe('foo'));
+      return render(<Component />).then(e => expect(e.textContent).toBe('foo'));
     });
   });
 
@@ -1157,18 +1160,18 @@ describe('ReactDOMServerIntegration', () => {
         render() {
           return (
           <div id="parent">
-            <ClassChildWithContext/>
-            <StatelessChildWithContext/>
-            <ClassChildWithWrongContext/>
-            <StatelessChildWithWrongContext/>
-            <ClassChildWithoutContext/>
-            <StatelessChildWithoutContext/>
+            <ClassChildWithContext />
+            <StatelessChildWithContext />
+            <ClassChildWithWrongContext />
+            <StatelessChildWithWrongContext />
+            <ClassChildWithoutContext />
+            <StatelessChildWithoutContext />
           </div>);
         }
     }
       Parent.childContextTypes = {text: React.PropTypes.string };
 
-      return render(<Parent/>).then(e => {
+      return render(<Parent />).then(e => {
         expect(e.querySelector('#classChild').textContent).toBe('purple');
         expect(e.querySelector('#statelessChild').textContent).toBe('purple');
         expect(e.querySelector('#classWoChild').textContent).toBe('');
@@ -1197,8 +1200,8 @@ describe('ReactDOMServerIntegration', () => {
           return (
             <div id="child">
               <div id="childContext">{this.context.text}</div>
-              <ClassGrandchild/>
-              <StatelessGrandchild/>
+              <ClassGrandchild />
+              <StatelessGrandchild />
             </div>);
         }
       }
@@ -1208,12 +1211,12 @@ describe('ReactDOMServerIntegration', () => {
           return {text: 'purple'};
         }
         render() {
-          return <div id="parent"><Child/></div>;
+          return <div id="parent"><Child /></div>;
         }
     }
       Parent.childContextTypes = {text: React.PropTypes.string };
 
-      return render(<Parent/>).then(e => {
+      return render(<Parent />).then(e => {
         expect(e.querySelector('#childContext').textContent).toBe('');
         expect(e.querySelector('#statelessGrandchild').textContent).toBe('purple');
         expect(e.querySelector('#classGrandchild').textContent).toBe('purple');
@@ -1226,7 +1229,7 @@ describe('ReactDOMServerIntegration', () => {
           return {text: 'purple'};
         }
         render() {
-          return <Child/>;
+          return <Child />;
         }
       }
       Parent.childContextTypes = {text: React.PropTypes.string};
@@ -1236,7 +1239,7 @@ describe('ReactDOMServerIntegration', () => {
           return {text: 'red'};
         }
         render() {
-          return <Grandchild/>;
+          return <Grandchild />;
         }
       }
       Child.childContextTypes = {text: React.PropTypes.string};
@@ -1246,7 +1249,7 @@ describe('ReactDOMServerIntegration', () => {
       };
       Grandchild.contextTypes = {text: React.PropTypes.string};
 
-      return render(<Parent/>).then(e => expect(e.textContent).toBe('red'));
+      return render(<Parent />).then(e => expect(e.textContent).toBe('red'));
     });
 
     itRenders('should merge a child context with a parent context', (render) => {
@@ -1255,7 +1258,7 @@ describe('ReactDOMServerIntegration', () => {
           return {text1: 'purple'};
         }
         render() {
-          return <Child/>;
+          return <Child />;
         }
       }
       Parent.childContextTypes = {text1: React.PropTypes.string};
@@ -1265,7 +1268,7 @@ describe('ReactDOMServerIntegration', () => {
           return {text2: 'red'};
         }
         render() {
-          return <Grandchild/>;
+          return <Grandchild />;
         }
       }
       Child.childContextTypes = {text2: React.PropTypes.string};
@@ -1275,7 +1278,7 @@ describe('ReactDOMServerIntegration', () => {
       };
       Grandchild.contextTypes = {text1: React.PropTypes.string, text2: React.PropTypes.string};
 
-      return render(<Parent/>).then(e => {
+      return render(<Parent />).then(e => {
         expect(e.querySelector('#first').textContent).toBe('purple');
         expect(e.querySelector('#second').textContent).toBe('red');
       });
@@ -1290,7 +1293,7 @@ describe('ReactDOMServerIntegration', () => {
           this.setState({text: 'foo'});
         }
         render() {
-          return <Child/>;
+          return <Child />;
         }
       }
       Parent.childContextTypes = {text: React.PropTypes.string};
@@ -1300,33 +1303,33 @@ describe('ReactDOMServerIntegration', () => {
       };
       Child.contextTypes = {text: React.PropTypes.string};
 
-      return render(<Parent/>).then(e => expect(e.textContent).toBe('foo'));
+      return render(<Parent />).then(e => expect(e.textContent).toBe('foo'));
     });
 
 
     itThrowsOnRender('throws if getChildContext exists without childContextTypes', render => {
       class Component extends React.Component {
         render() {
-          return <div/>;
+          return <div />;
         }
         getChildContext() {
           return {foo: 'bar'};
         }
       }
-      return render(<Component/>);
+      return render(<Component />);
     });
 
     itThrowsOnRender('throws if getChildContext returns a value not in childContextTypes', render => {
       class Component extends React.Component {
         render() {
-          return <div/>;
+          return <div />;
         }
         getChildContext() {
           return {value1: 'foo', value2: 'bar'};
         }
       }
       Component.childContextTypes = {value1: React.PropTypes.string};
-      return render(<Component/>);
+      return render(<Component />);
     });
   });
 
@@ -1336,10 +1339,10 @@ describe('ReactDOMServerIntegration', () => {
       let refCount = 0;
       class RefsComponent extends React.Component {
         render() {
-          return <div ref={(e) => refCount++}/>;
+          return <div ref={(e) => refCount++} />;
         }
       }
-      return expectMarkupMatch(<RefsComponent/>, <div/>)
+      return expectMarkupMatch(<RefsComponent />, <div />)
         .then(() => expect(refCount).toBe(0));
     });
 
@@ -1347,10 +1350,10 @@ describe('ReactDOMServerIntegration', () => {
       let refCount = 0;
       class RefsComponent extends React.Component {
         render() {
-          return <div ref={(e) => refCount++}/>;
+          return <div ref={(e) => refCount++} />;
         }
       }
-      return expectMarkupMatch(<div/>, <RefsComponent/>)
+      return expectMarkupMatch(<div />, <RefsComponent />)
         .then(() => expect(refCount).toBe(1));
     });
 
@@ -1358,10 +1361,10 @@ describe('ReactDOMServerIntegration', () => {
       let refElement = null;
       class RefsComponent extends React.Component {
         render() {
-          return <div ref={(e) => refElement = e}/>;
+          return <div ref={(e) => refElement = e} />;
         }
       }
-      return clientRenderOnServerString(<RefsComponent/>).then(element => {
+      return clientRenderOnServerString(<RefsComponent />).then(element => {
         expect(refElement).not.toBe(null);
         expect(refElement).toBe(element);
       });
@@ -1370,16 +1373,16 @@ describe('ReactDOMServerIntegration', () => {
     it('should have string refs on client when rendered over server markup', () => {
       class RefsComponent extends React.Component {
         render() {
-          return <div ref="myDiv"/>;
+          return <div ref="myDiv" />;
         }
       }
 
       return new Promise((resolve) => {
-        const markup = ReactDOMServer.renderToString(<RefsComponent/>);
+        const markup = ReactDOMServer.renderToString(<RefsComponent />);
         const root = document.createElement('div');
         root.innerHTML = markup;
         let component = null;
-        ReactDOM.render(<RefsComponent ref={e => component = e}/>, root, () => {
+        ReactDOM.render(<RefsComponent ref={e => component = e} />, root, () => {
           expect(component.refs.myDiv).toBe(root.firstChild);
           resolve();
         });
@@ -1404,60 +1407,60 @@ describe('ReactDOMServerIntegration', () => {
           // try each type of component on client and server.
           ES6ClassComponent = class extends React.Component {
             render() {
-              return <div id={this.props.id}/>;
+              return <div id={this.props.id} />;
             }
           };
           CreateClassComponent = React.createClass({
             render: function() {
-              return <div id={this.props.id}/>;
+              return <div id={this.props.id} />;
             },
           });
-          PureComponent = (props) => <div id={props.id}/>;
-          bareElement = <div id="foobarbaz"/>;
+          PureComponent = (props) => <div id={props.id} />;
+          bareElement = <div id="foobarbaz" />;
         });
 
         it('ES6 Class ==> ES6 Class', () =>
-          expectMarkupMatch(<ES6ClassComponent id="foobarbaz"/>, <ES6ClassComponent id="foobarbaz"/>));
+          expectMarkupMatch(<ES6ClassComponent id="foobarbaz" />, <ES6ClassComponent id="foobarbaz" />));
         it('ES6 Class ==> React.createClass', () =>
-          expectMarkupMatch(<ES6ClassComponent id="foobarbaz"/>, <CreateClassComponent id="foobarbaz"/>));
+          expectMarkupMatch(<ES6ClassComponent id="foobarbaz" />, <CreateClassComponent id="foobarbaz" />));
         it('ES6 Class ==> Pure Component', () =>
-          expectMarkupMatch(<ES6ClassComponent id="foobarbaz"/>, <PureComponent id="foobarbaz"/>));
+          expectMarkupMatch(<ES6ClassComponent id="foobarbaz" />, <PureComponent id="foobarbaz" />));
         it('ES6 Class ==> Bare Element', () =>
-          expectMarkupMatch(<ES6ClassComponent id="foobarbaz"/>, bareElement));
+          expectMarkupMatch(<ES6ClassComponent id="foobarbaz" />, bareElement));
 
         it('React.createClass ==> ES6 Class', () =>
-          expectMarkupMatch(<CreateClassComponent id="foobarbaz"/>, <ES6ClassComponent id="foobarbaz"/>));
+          expectMarkupMatch(<CreateClassComponent id="foobarbaz" />, <ES6ClassComponent id="foobarbaz" />));
         it('React.createClass ==> React.createClass', () =>
-          expectMarkupMatch(<CreateClassComponent id="foobarbaz"/>, <CreateClassComponent id="foobarbaz"/>));
+          expectMarkupMatch(<CreateClassComponent id="foobarbaz" />, <CreateClassComponent id="foobarbaz" />));
         it('React.createClass ==> Pure Component', () =>
-          expectMarkupMatch(<CreateClassComponent id="foobarbaz"/>, <PureComponent id="foobarbaz"/>));
+          expectMarkupMatch(<CreateClassComponent id="foobarbaz" />, <PureComponent id="foobarbaz" />));
         it('React.createClass ==> Bare Element', () =>
-          expectMarkupMatch(<CreateClassComponent id="foobarbaz"/>, bareElement));
+          expectMarkupMatch(<CreateClassComponent id="foobarbaz" />, bareElement));
 
         it('Pure Component ==> ES6 Class', () =>
-          expectMarkupMatch(<PureComponent id="foobarbaz"/>, <ES6ClassComponent id="foobarbaz"/>));
+          expectMarkupMatch(<PureComponent id="foobarbaz" />, <ES6ClassComponent id="foobarbaz" />));
         it('Pure Component ==> React.createClass', () =>
-          expectMarkupMatch(<PureComponent id="foobarbaz"/>, <CreateClassComponent id="foobarbaz"/>));
+          expectMarkupMatch(<PureComponent id="foobarbaz" />, <CreateClassComponent id="foobarbaz" />));
         it('Pure Component ==> Pure Component', () =>
-          expectMarkupMatch(<PureComponent id="foobarbaz"/>, <PureComponent id="foobarbaz"/>));
+          expectMarkupMatch(<PureComponent id="foobarbaz" />, <PureComponent id="foobarbaz" />));
         it('Pure Component ==> Bare Element', () =>
-          expectMarkupMatch(<PureComponent id="foobarbaz"/>, bareElement));
+          expectMarkupMatch(<PureComponent id="foobarbaz" />, bareElement));
 
         it('Bare Element ==> ES6 Class', () =>
-          expectMarkupMatch(bareElement, <ES6ClassComponent id="foobarbaz"/>));
+          expectMarkupMatch(bareElement, <ES6ClassComponent id="foobarbaz" />));
         it('Bare Element ==> React.createClass', () =>
-          expectMarkupMatch(bareElement, <CreateClassComponent id="foobarbaz"/>));
+          expectMarkupMatch(bareElement, <CreateClassComponent id="foobarbaz" />));
         it('Bare Element ==> Pure Component', () =>
-          expectMarkupMatch(bareElement, <PureComponent id="foobarbaz"/>));
+          expectMarkupMatch(bareElement, <PureComponent id="foobarbaz" />));
         it('Bare Element ==> Bare Element', () =>
           expectMarkupMatch(bareElement, bareElement));
       });
 
-      it('should error reconnecting different element types', () => expectMarkupMismatch(<div/>, <span/>));
-      it('should error reconnecting missing attributes', () => expectMarkupMismatch(<div id="foo"/>, <div/>));
-      it('should error reconnecting added attributes', () => expectMarkupMismatch(<div/>, <div id="foo"/>));
+      it('should error reconnecting different element types', () => expectMarkupMismatch(<div />, <span />));
+      it('should error reconnecting missing attributes', () => expectMarkupMismatch(<div id="foo" />, <div />));
+      it('should error reconnecting added attributes', () => expectMarkupMismatch(<div />, <div id="foo" />));
       it('should error reconnecting different attribute values',
-        () => expectMarkupMismatch(<div id="foo"/>, <div id="bar"/>));
+        () => expectMarkupMismatch(<div id="foo" />, <div id="bar" />));
     });
 
     describe('text nodes', function() {
@@ -1484,43 +1487,43 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     describe('element trees and children', function() {
-      it('should error reconnecting missing children', () => expectMarkupMismatch(<div><div/></div>, <div/>));
-      it('should error reconnecting added children', () => expectMarkupMismatch(<div/>, <div><div/></div>));
+      it('should error reconnecting missing children', () => expectMarkupMismatch(<div><div /></div>, <div />));
+      it('should error reconnecting added children', () => expectMarkupMismatch(<div />, <div><div /></div>));
       it('should error reconnecting more children',
-        () => expectMarkupMismatch(<div><div/></div>, <div><div/><div/></div>));
+        () => expectMarkupMismatch(<div><div /></div>, <div><div /><div /></div>));
       it('should error reconnecting fewer children',
-        () => expectMarkupMismatch(<div><div/><div/></div>, <div><div/></div>));
+        () => expectMarkupMismatch(<div><div /><div /></div>, <div><div /></div>));
       it('should error reconnecting reordered children',
-        () => expectMarkupMismatch(<div><div/><span/></div>, <div><span/><div/></div>));
+        () => expectMarkupMismatch(<div><div /><span /></div>, <div><span /><div /></div>));
       it('should error reconnecting a div with children separated by whitespace on the client',
           () => expectMarkupMismatch(
-            <div id="parent"><div id="child1"/><div id="child2"/></div>,
-            <div id="parent"><div id="child1"/>      <div id="child2"/></div>)); // eslint-disable-line no-multi-spaces
+            <div id="parent"><div id="child1" /><div id="child2" /></div>,
+            <div id="parent"><div id="child1" />      <div id="child2" /></div>)); // eslint-disable-line no-multi-spaces
       it('should error reconnecting a div with children separated by different whitespace on the server',
         () => expectMarkupMismatch(
-          <div id="parent"><div id="child1"/>      <div id="child2"/></div>, // eslint-disable-line no-multi-spaces
-          <div id="parent"><div id="child1"/><div id="child2"/></div>));
+          <div id="parent"><div id="child1" />      <div id="child2" /></div>, // eslint-disable-line no-multi-spaces
+          <div id="parent"><div id="child1" /><div id="child2" /></div>));
       it('should error reconnecting a div with children separated by different whitespace',
           () => expectMarkupMismatch(
-            <div id="parent"><div id="child1"/> <div id="child2"/></div>,
-            <div id="parent"><div id="child1"/>      <div id="child2"/></div>)); // eslint-disable-line no-multi-spaces
+            <div id="parent"><div id="child1" /> <div id="child2" /></div>,
+            <div id="parent"><div id="child1" />      <div id="child2" /></div>)); // eslint-disable-line no-multi-spaces
       it('can distinguish an empty component from a dom node', () =>
-        expectMarkupMismatch(<div><span/></div>, <div><EmptyComponent/></div>));
+        expectMarkupMismatch(<div><span /></div>, <div><EmptyComponent /></div>));
       it('can distinguish an empty component from an empty text component', () =>
-        expectMarkupMismatch(<div><EmptyComponent/></div>, <div>{''}</div>));
+        expectMarkupMismatch(<div><EmptyComponent /></div>, <div>{''}</div>));
 
       it('should reconnect if component trees differ but resulting markup is the same', () => {
         class Component1 extends React.Component {
           render() {
-            return <span id="foobar"/>;
+            return <span id="foobar" />;
           }
         }
         class Component2 extends React.Component {
           render() {
-            return <span id="foobar"/>;
+            return <span id="foobar" />;
           }
         }
-        return expectMarkupMatch(<Component1/>, <Component2/>);
+        return expectMarkupMatch(<Component1 />, <Component2 />);
       });
     });
 
