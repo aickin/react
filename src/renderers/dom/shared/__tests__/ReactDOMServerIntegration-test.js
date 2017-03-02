@@ -482,7 +482,7 @@ describe('ReactDOMServerIntegration', () => {
     describe('elements with text children', function() {
       itRenders('renders a div with text', async render => {
         const e = await render(<div>Text</div>);
-        expect(e.tagName.toLowerCase()).toBe('div');
+        expect(e.tagName).toBe('DIV');
         expect(e.childNodes.length).toBe(1);
         expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
       });
@@ -524,21 +524,21 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div>Text<span>More Text</span></div>);
         expect(e.childNodes.length).toBe(4);
         expectTextNode(e.childNodes[0], 'Text');
-        expect(e.childNodes[3].tagName.toLowerCase()).toBe('span');
+        expect(e.childNodes[3].tagName).toBe('SPAN');
         expect(e.childNodes[3].childNodes.length).toBe(1);
         expectNode(e.childNodes[3].firstChild, TEXT_NODE_TYPE, 'More Text');
       });
 
       itRenders('renders a non-standard element with text', async render => {
         const e = await render(<nonstandard>Text</nonstandard>);
-        expect(e.tagName.toLowerCase()).toBe('nonstandard');
+        expect(e.tagName).toBe('NONSTANDARD');
         expect(e.childNodes.length).toBe(1);
         expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
       });
 
       itRenders('renders a custom element with text', async render => {
         const e = await render(<custom-element>Text</custom-element>);
-        expect(e.tagName.toLowerCase()).toBe('custom-element');
+        expect(e.tagName).toBe('CUSTOM-ELEMENT');
         expect(e.childNodes.length).toBe(1);
         expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
       });
@@ -654,7 +654,7 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('renders an svg element', async render => {
         const e = await render(<svg />);
         expect(e.childNodes.length).toBe(0);
-        expect(e.tagName.toLowerCase()).toBe('svg');
+        expect(e.tagName).toBe('svg');
         expect(e.namespaceURI).toBe('http://www.w3.org/2000/svg');
       });
 
@@ -662,7 +662,7 @@ describe('ReactDOMServerIntegration', () => {
         let e = await render(<svg><image xlinkHref="http://i.imgur.com/w7GCRPb.png" /></svg>);
         e = e.firstChild;
         expect(e.childNodes.length).toBe(0);
-        expect(e.tagName.toLowerCase()).toBe('image');
+        expect(e.tagName).toBe('image');
         expect(e.namespaceURI).toBe('http://www.w3.org/2000/svg');
         expect(e.getAttributeNS('http://www.w3.org/1999/xlink', 'href')).toBe('http://i.imgur.com/w7GCRPb.png');
       });
@@ -670,7 +670,7 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('renders a math element', async render => {
         const e = await render(<math />);
         expect(e.childNodes.length).toBe(0);
-        expect(e.tagName.toLowerCase()).toBe('math');
+        expect(e.tagName).toBe('math');
         expect(e.namespaceURI).toBe('http://www.w3.org/1998/Math/MathML');
       });
     });
@@ -680,20 +680,20 @@ describe('ReactDOMServerIntegration', () => {
       const e = await render(<img />);
       expect(e.childNodes.length).toBe(0);
       expect(e.nextSibling).toBe(null);
-      expect(e.tagName.toLowerCase()).toBe('img');
+      expect(e.tagName).toBe('IMG');
     });
 
     itRenders('renders a button', async render => {
       const e = await render(<button />);
       expect(e.childNodes.length).toBe(0);
       expect(e.nextSibling).toBe(null);
-      expect(e.tagName.toLowerCase()).toBe('button');
+      expect(e.tagName).toBe('BUTTON');
     });
 
     itRenders('renders a div with dangerouslySetInnerHTML', async render => {
       const e = await render(<div dangerouslySetInnerHTML={{__html:"<span id='child'/>"}} />);
       expect(e.childNodes.length).toBe(1);
-      expect(e.firstChild.tagName.toLowerCase()).toBe('span');
+      expect(e.firstChild.tagName).toBe('SPAN');
       expect(e.firstChild.getAttribute('id')).toBe('child');
       expect(e.firstChild.childNodes.length).toBe(0);
     });
@@ -766,11 +766,11 @@ describe('ReactDOMServerIntegration', () => {
             </Component>
           </Component>);
         for (var i = 0; i < 3; i++) {
-          expect(e.tagName.toLowerCase()).toBe('div');
+          expect(e.tagName).toBe('DIV');
           expect(e.childNodes.length).toBe(1);
           e = e.firstChild;
         }
-        expect(e.tagName.toLowerCase()).toBe('div');
+        expect(e.tagName).toBe('DIV');
         expect(e.childNodes.length).toBe(0);
       });
 
@@ -785,15 +785,15 @@ describe('ReactDOMServerIntegration', () => {
               <Component /><Component />
             </Component>
           </Component>);
-        expect(e.tagName.toLowerCase()).toBe('div');
+        expect(e.tagName).toBe('DIV');
         expect(e.childNodes.length).toBe(2);
         for (var i = 0; i < 2; i++) {
           var child = e.childNodes[i];
-          expect(child.tagName.toLowerCase()).toBe('div');
+          expect(child.tagName).toBe('DIV');
           expect(child.childNodes.length).toBe(2);
           for (var j = 0; j < 2; j++) {
             var grandchild = child.childNodes[j];
-            expect(grandchild.tagName.toLowerCase()).toBe('div');
+            expect(grandchild.tagName).toBe('DIV');
             expect(grandchild.childNodes.length).toBe(0);
           }
         }
