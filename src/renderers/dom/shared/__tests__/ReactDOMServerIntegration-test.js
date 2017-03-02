@@ -52,8 +52,8 @@ async function expectErrors(fn, count) {
   return result;
 }
 
-function itRejects(desc, testFn) {
-  it(desc, function() {
+function itThrows(desc, testFn) {
+  it(`throws ${desc}`, () => {
     return testFn()
       .then(() => expect(false).toBe('The promise resolved and should not have.'))
       .catch(() => {});
@@ -146,15 +146,15 @@ function itClientRenders(desc, testFn) {
     () => testFn(clientRenderOnBadMarkup));
 }
 
-function itThrowsOnRender(desc, testFn) {
-  itRejects(`${desc} with server string render`,
+function itThrowsWhenRendering(desc, testFn) {
+  itThrows(`when rendering ${desc} with server string render`,
      () => testFn(serverRender));
-  itRejects(`${desc} with clean client render`,
+  itThrows(`when rendering ${desc} with clean client render`,
      () => testFn(clientCleanRender));
 
    // we subtract one from the warning count here because the throw means that it won't
    // get the usual markup mismatch warning.
-  itRejects(`${desc} with client render on top of bad server markup`,
+  itThrows(`when rendering ${desc} with client render on top of bad server markup`,
      () => testFn((element, warningCount = 0) => clientRenderOnBadMarkup(element, warningCount - 1)));
 }
 
@@ -855,26 +855,26 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     describe('components that throw errors', function() {
-      itThrowsOnRender('throws rendering a string component', async render => {
+      itThrowsWhenRendering('a string component', async render => {
         const StringComponent = () => 'foo';
         await render(<StringComponent />, 1);
       });
 
-      itThrowsOnRender('throws rendering an undefined component', async render => {
+      itThrowsWhenRendering('an undefined component', async render => {
         const UndefinedComponent = () => undefined;
         await render(<UndefinedComponent />, 1);
       });
 
-      itThrowsOnRender('throws rendering a number component', async render => {
+      itThrowsWhenRendering('a number component', async render => {
         const NumberComponent = () => 54;
         await render(<NumberComponent />, 1);
       });
 
-      itThrowsOnRender('throws when rendering null', render => render(null));
-      itThrowsOnRender('throws when rendering false', render => render(false));
-      itThrowsOnRender('throws when rendering undefined', render => render(undefined));
-      itThrowsOnRender('throws when rendering number', render => render(30));
-      itThrowsOnRender('throws when rendering string', render => render('foo'));
+      itThrowsWhenRendering('null', render => render(null));
+      itThrowsWhenRendering('false', render => render(false));
+      itThrowsWhenRendering('undefined', render => render(undefined));
+      itThrowsWhenRendering('number', render => render(30));
+      itThrowsWhenRendering('string', render => render('foo'));
     });
   });
 
@@ -1389,7 +1389,7 @@ describe('ReactDOMServerIntegration', () => {
     });
 
 
-    itThrowsOnRender('throws if getChildContext exists without childContextTypes', render => {
+    itThrowsWhenRendering('if getChildContext exists without childContextTypes', render => {
       class Component extends React.Component {
         render() {
           return <div />;
@@ -1401,7 +1401,7 @@ describe('ReactDOMServerIntegration', () => {
       return render(<Component />);
     });
 
-    itThrowsOnRender('throws if getChildContext returns a value not in childContextTypes', render => {
+    itThrowsWhenRendering('if getChildContext returns a value not in childContextTypes', render => {
       class Component extends React.Component {
         render() {
           return <div />;
