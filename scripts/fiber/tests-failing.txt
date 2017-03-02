@@ -21,6 +21,62 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * gives source code refs for unknown prop warning for exact elements (ssr)
 * gives source code refs for unknown prop warning for exact elements in composition (ssr)
 
+src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
+* renders renders a div with blank text children with clean client render
+* renders renders a div with blank text children with client render on top of good server markup
+* renders renders a div with blank text children with client render on top of bad server markup
+* renders a div with whitespace children with clean client render
+* renders a div with whitespace children with client render on top of good server markup
+* renders a div with whitespace children with client render on top of bad server markup
+* renders a div with text sibling to a node with clean client render
+* renders a div with text sibling to a node with client render on top of good server markup
+* renders a div with text sibling to a node with client render on top of bad server markup
+* renders leading blank children with comments when there are multiple children with clean client render
+* renders leading blank children with comments when there are multiple children with client render on top of good server markup
+* renders leading blank children with comments when there are multiple children with client render on top of bad server markup
+* renders trailing blank children with comments when there are multiple children with clean client render
+* renders trailing blank children with comments when there are multiple children with client render on top of good server markup
+* renders trailing blank children with comments when there are multiple children with client render on top of bad server markup
+* renders an element with two text children with comments with clean client render
+* renders an element with two text children with comments with client render on top of good server markup
+* renders an element with two text children with comments with client render on top of bad server markup
+* renders an element with number and text children with comments with clean client render
+* renders an element with number and text children with comments with client render on top of good server markup
+* renders an element with number and text children with comments with client render on top of bad server markup
+* renders a null component as empty with clean client render
+* renders a null component as empty with client render on top of good server markup
+* renders a null component as empty with client render on top of bad server markup
+* renders a null component children as empty with clean client render
+* renders a null component children as empty with client render on top of good server markup
+* renders a null component children as empty with client render on top of bad server markup
+* renders a false component as empty with clean client render
+* renders a false component as empty with client render on top of good server markup
+* renders a false component as empty with client render on top of bad server markup
+* renders null children as blank with clean client render
+* renders null children as blank with client render on top of good server markup
+* renders null children as blank with client render on top of bad server markup
+* renders false children as blank with clean client render
+* renders false children as blank with client render on top of good server markup
+* renders false children as blank with client render on top of bad server markup
+* renders null and false children together as blank with clean client render
+* renders null and false children together as blank with client render on top of good server markup
+* renders null and false children together as blank with client render on top of bad server markup
+* renders a div with multiple children separated by whitespace with clean client render
+* renders a div with multiple children separated by whitespace with client render on top of good server markup
+* renders a div with multiple children separated by whitespace with client render on top of bad server markup
+* renders a div with a child surrounded by whitespace with clean client render
+* renders a div with a child surrounded by whitespace with client render on top of good server markup
+* renders a div with a child surrounded by whitespace with client render on top of bad server markup
+* renders >,<, and & as multiple children with clean client render
+* renders >,<, and & as multiple children with client render on top of good server markup
+* renders >,<, and & as multiple children with client render on top of bad server markup
+* should not blow away user-entered text on successful reconnect to an uncontrolled input
+* should not blow away user-entered text on successful reconnect to a controlled input
+* should not blow away user-entered text on successful reconnect to an uncontrolled checkbox
+* should not blow away user-entered text on successful reconnect to a controlled checkbox
+* should not blow away user-entered text on successful reconnect to an uncontrolled textarea
+* should not blow away user-entered text on successful reconnect to a controlled textarea
+
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * can reconcile text merged by Node.normalize() alongside other elements
 * can reconcile text merged by Node.normalize()
