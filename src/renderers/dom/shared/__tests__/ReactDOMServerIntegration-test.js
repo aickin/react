@@ -310,87 +310,87 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     describe('download property (combined boolean/string attribute)', function() {
-      itRenders('handles download prop with true value', async render => {
+      itRenders('download prop with true value', async render => {
         const e = await render(<a download={true} />);
         expect(e.getAttribute('download')).toBe('');
       });
 
-      itRenders('handles download prop with false value', async render => {
+      itRenders('download prop with false value', async render => {
         const e = await render(<a download={false} />);
         expect(e.getAttribute('download')).toBe(null);
       });
 
-      itRenders('handles download prop with no value', async render => {
+      itRenders('download prop with no value', async render => {
         const e = await render(<a download />); // eslint-disable-line react/jsx-boolean-value
         expect(e.getAttribute('download')).toBe('');
       });
 
-      itRenders('handles download prop with string value', async render => {
+      itRenders('download prop with string value', async render => {
         const e = await render(<a download="myfile" />);
         expect(e.getAttribute('download')).toBe('myfile');
       });
 
-      itRenders('handles download prop with string "true" value', async render => {
+      itRenders('download prop with string "true" value', async render => {
         const e = await render(<a download={'true'} />);
         expect(e.getAttribute('download')).toBe('true');
       });
     });
 
     describe('className property', function() {
-      itRenders('renders className prop with string value', async render => {
+      itRenders('className prop with string value', async render => {
         const e = await render(<div className="myClassName" />);
         expect(e.getAttribute('class')).toBe('myClassName');
       });
 
-      itRenders('renders className prop with empty string value', async render => {
+      itRenders('className prop with empty string value', async render => {
         const e = await render(<div className="" />);
         expect(e.getAttribute('class')).toBe('');
       });
 
       // this probably is just masking programmer error, but it is existing behavior.
-      itRenders('renders className prop with true value', async render => {
+      itRenders('className prop with true value', async render => {
         const e = await render(<div className={true} />);
         expect(e.getAttribute('class')).toBe('true');
       });
 
       // this probably is just masking programmer error, but it is existing behavior.
-      itRenders('renders className prop with false value', async render => {
+      itRenders('className prop with false value', async render => {
         const e = await render(<div className={false} />);
         expect(e.getAttribute('class')).toBe('false');
       });
 
       // this probably is just masking programmer error, but it is existing behavior.
-      itRenders('renders className prop with false value', async render => {
+      itRenders('className prop with false value', async render => {
         const e = await render(<div className />); // eslint-disable-line react/jsx-boolean-value
         expect(e.getAttribute('class')).toBe('true');
       });
     });
 
     describe('htmlFor property', function() {
-      itRenders('renders htmlFor with string value', async render => {
+      itRenders('htmlFor with string value', async render => {
         const e = await render(<div htmlFor="myFor" />);
         expect(e.getAttribute('for')).toBe('myFor');
       });
 
-      itRenders('renders htmlFor with an empty string', async render => {
+      itRenders('htmlFor with an empty string', async render => {
         const e = await render(<div htmlFor="" />);
         expect(e.getAttribute('for')).toBe('');
       });
 
       // this probably is just masking programmer error, but it is existing behavior.
-      itRenders('renders className prop with true value', async render => {
+      itRenders('className prop with true value', async render => {
         const e = await render(<div htmlFor={true} />);
         expect(e.getAttribute('for')).toBe('true');
       });
 
       // this probably is just masking programmer error, but it is existing behavior.
-      itRenders('renders className prop with false value', async render => {
+      itRenders('className prop with false value', async render => {
         const e = await render(<div htmlFor={false} />);
         expect(e.getAttribute('for')).toBe('false');
       });
 
       // this probably is just masking programmer error, but it is existing behavior.
-      itRenders('renders className prop with false value', async render => {
+      itRenders('className prop with false value', async render => {
         const e = await render(<div htmlFor />); // eslint-disable-line react/jsx-boolean-value
         expect(e.getAttribute('for')).toBe('true');
       });
@@ -398,7 +398,7 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     describe('props with special meaning in React', function() {
-      itRenders('does not render ref property as an attribute', async render => {
+      itRenders('no ref attribute', async render => {
         class RefComponent extends React.Component {
           render() {
             return <div ref="foo" />;
@@ -408,50 +408,50 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.getAttribute('ref')).toBe(null);
       });
 
-      itRenders('does not render children property as an attribute', async render => {
+      itRenders('no children attribute', async render => {
         const e = await render(React.createElement('div', {}, 'foo'));
         expect(e.getAttribute('children')).toBe(null);
       });
 
-      itRenders('does not render key property as an attribute', async render => {
+      itRenders('no key attribute', async render => {
         const e = await render(<div key="foo" />);
         expect(e.getAttribute('key')).toBe(null);
       });
 
-      itRenders('does not render dangerouslySetInnerHTML as an attribute', async render => {
+      itRenders('no dangerouslySetInnerHTML attribute', async render => {
         const e = await render(<div dangerouslySetInnerHTML={{__html:'foo'}} />);
         expect(e.getAttribute('dangerouslySetInnerHTML')).toBe(null);
       });
     });
 
     describe('unknown attributes', function() {
-      itRenders('does not render unknown attributes', async render => {
+      itRenders('no unknown attributes', async render => {
         const e = await render(<div foo="bar" />, 1);
         expect(e.getAttribute('foo')).toBe(null);
       });
 
-      itRenders('does render unknown data- attributes', async render => {
+      itRenders('unknown data- attributes', async render => {
         const e = await render(<div data-foo="bar" />);
         expect(e.getAttribute('data-foo')).toBe('bar');
       });
 
-      itRenders('does not render unknown attributes for non-standard elements', async render => {
+      itRenders('no unknown attributes for non-standard elements', async render => {
         const e = await render(<nonstandard foo="bar" />, 1);
         expect(e.getAttribute('foo')).toBe(null);
       });
 
-      itRenders('does render unknown attributes for custom elements', async render => {
+      itRenders('unknown attributes for custom elements', async render => {
         const e = await render(<custom-element foo="bar" />);
         expect(e.getAttribute('foo')).toBe('bar');
       });
 
-      itRenders('does render unknown attributes for custom elements using is', async render => {
+      itRenders('unknown attributes for custom elements using is', async render => {
         const e = await render(<div is="custom-element" foo="bar" />);
         expect(e.getAttribute('foo')).toBe('bar');
       });
     });
 
-    itRenders('does not render HTML events', async render => {
+    itRenders('no HTML events', async render => {
       const e = await render(<div onClick={() => {}} />);
       expect(e.getAttribute('onClick')).toBe(null);
       expect(e.getAttribute('onClick')).toBe(null);
@@ -480,26 +480,26 @@ describe('ReactDOMServerIntegration', () => {
     }
 
     describe('elements with text children', function() {
-      itRenders('renders a div with text', async render => {
+      itRenders('a div with text', async render => {
         const e = await render(<div>Text</div>);
         expect(e.tagName).toBe('DIV');
         expect(e.childNodes.length).toBe(1);
         expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
       });
 
-      itRenders('renders a div with text with flanking whitespace', async render => {
+      itRenders('a div with text with flanking whitespace', async render => {
         const e = await render(<div>  Text </div>);
         expect(e.childNodes.length).toBe(1);
         expectNode(e.childNodes[0], TEXT_NODE_TYPE, '  Text ');
       });
 
-      itRenders('renders a div with text', async render => {
+      itRenders('a div with text', async render => {
         const e = await render(<div>{'Text'}</div>);
         expect(e.childNodes.length).toBe(1);
         expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
       });
 
-      itRenders('renders a div with blank text child', async render => {
+      itRenders('a div with blank text child', async render => {
         const e = await render(<div>{''}</div>);
         expect(e.childNodes.length).toBe(0);
       });
@@ -512,7 +512,7 @@ describe('ReactDOMServerIntegration', () => {
         expectTextNode(e.childNodes[4], '');
       });
 
-      itRenders('renders a div with whitespace children', async render => {
+      itRenders('a div with whitespace children', async render => {
         const e = await render(<div>{' '}{' '}{' '}</div>);
         expect(e.childNodes.length).toBe(9);
         expectTextNode(e.childNodes[0], ' ');
@@ -520,7 +520,7 @@ describe('ReactDOMServerIntegration', () => {
         expectTextNode(e.childNodes[6], ' ');
       });
 
-      itRenders('renders a div with text sibling to a node', async render => {
+      itRenders('a div with text sibling to a node', async render => {
         const e = await render(<div>Text<span>More Text</span></div>);
         expect(e.childNodes.length).toBe(4);
         expectTextNode(e.childNodes[0], 'Text');
@@ -529,41 +529,41 @@ describe('ReactDOMServerIntegration', () => {
         expectNode(e.childNodes[3].firstChild, TEXT_NODE_TYPE, 'More Text');
       });
 
-      itRenders('renders a non-standard element with text', async render => {
+      itRenders('a non-standard element with text', async render => {
         const e = await render(<nonstandard>Text</nonstandard>);
         expect(e.tagName).toBe('NONSTANDARD');
         expect(e.childNodes.length).toBe(1);
         expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
       });
 
-      itRenders('renders a custom element with text', async render => {
+      itRenders('a custom element with text', async render => {
         const e = await render(<custom-element>Text</custom-element>);
         expect(e.tagName).toBe('CUSTOM-ELEMENT');
         expect(e.childNodes.length).toBe(1);
         expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
       });
 
-      itRenders('renders leading blank children with comments when there are multiple children', async render => {
+      itRenders('leading blank children with comments when there are multiple children', async render => {
         const e = await render(<div>{''}foo</div>);
         expect(e.childNodes.length).toBe(5);
         expectTextNode(e.childNodes[0], '');
         expectTextNode(e.childNodes[2], 'foo');
       });
 
-      itRenders('renders trailing blank children with comments when there are multiple children', async render => {
+      itRenders('trailing blank children with comments when there are multiple children', async render => {
         const e = await render(<div>foo{''}</div>);
         expect(e.childNodes.length).toBe(5);
         expectTextNode(e.childNodes[0], 'foo');
         expectTextNode(e.childNodes[3], '');
       });
 
-      itRenders('renders an element with just one text child without comments', async render => {
+      itRenders('an element with just one text child without comments', async render => {
         const e = await render(<div>foo</div>);
         expect(e.childNodes.length).toBe(1);
         expectNode(e.firstChild, TEXT_NODE_TYPE, 'foo');
       });
 
-      itRenders('renders an element with two text children with comments', async render => {
+      itRenders('an element with two text children with comments', async render => {
         const e = await render(<div>{'foo'}{'bar'}</div>);
         expect(e.childNodes.length).toBe(6);
         expectTextNode(e.childNodes[0], 'foo');
@@ -572,18 +572,18 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     describe('elements with number children', function() {
-      itRenders('renders a number as single child', async render => {
+      itRenders('a number as single child', async render => {
         const e = await render(<div>{3}</div>);
         expect(e.textContent).toBe('3');
       });
 
       // zero is falsey, so it could look like no children if the code isn't careful.
-      itRenders('renders zero as single child', async render => {
+      itRenders('zero as single child', async render => {
         const e = await render(<div>{0}</div>);
         expect(e.textContent).toBe('0');
       });
 
-      itRenders('renders an element with number and text children with comments', async render => {
+      itRenders('an element with number and text children with comments', async render => {
         const e = await render(<div>{'foo'}{40}</div>);
         expect(e.childNodes.length).toBe(6);
         expectTextNode(e.childNodes[0], 'foo');
@@ -592,73 +592,73 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     describe('null, false, and undefined children', function() {
-      itRenders('renders null single child as blank', async render => {
+      itRenders('null single child as blank', async render => {
         const e = await render(<div>{null}</div>);
         expect(e.childNodes.length).toBe(0);
       });
 
-      itRenders('renders false single child as blank', async render => {
+      itRenders('false single child as blank', async render => {
         const e = await render(<div>{false}</div>);
         expect(e.childNodes.length).toBe(0);
       });
 
-      itRenders('renders undefined single child as blank', async render => {
+      itRenders('undefined single child as blank', async render => {
         const e = await render(<div>{undefined}</div>);
         expect(e.childNodes.length).toBe(0);
       });
 
-      itRenders('renders a null component as empty', async render => {
+      itRenders('a null component as empty', async render => {
         const NullComponent = () => null;
         const e = await render(<NullComponent />);
         expectEmptyNode(e);
       });
 
-      itRenders('renders a null component children as empty', async render => {
+      itRenders('a null component children as empty', async render => {
         const NullComponent = () => null;
         const e = await render(<div><NullComponent /></div>);
         expect(e.childNodes.length).toBe(1);
         expectEmptyNode(e.firstChild);
       });
 
-      itRenders('renders a false component as empty', async render => {
+      itRenders('a false component as empty', async render => {
         const FalseComponent = () => false;
         const e = await render(<FalseComponent />);
         expectEmptyNode(e);
       });
 
-      itRenders('renders null children as blank', async render => {
+      itRenders('null children as blank', async render => {
         const e = await render(<div>{null}foo</div>);
         expect(e.childNodes.length).toBe(3);
         expectTextNode(e.childNodes[0], 'foo');
       });
 
-      itRenders('renders false children as blank', async render => {
+      itRenders('false children as blank', async render => {
         const e = await render(<div>{false}foo</div>);
         expect(e.childNodes.length).toBe(3);
         expectTextNode(e.childNodes[0], 'foo');
       });
 
-      itRenders('renders null and false children together as blank', async render => {
+      itRenders('null and false children together as blank', async render => {
         const e = await render(<div>{false}{null}foo{null}{false}</div>);
         expect(e.childNodes.length).toBe(3);
         expectTextNode(e.childNodes[0], 'foo');
       });
 
-      itRenders('renders only null and false children as blank', async render => {
+      itRenders('only null and false children as blank', async render => {
         const e = await render(<div>{false}{null}{null}{false}</div>);
         expect(e.childNodes.length).toBe(0);
       });
     });
 
     describe('elements with implicit namespaces', function() {
-      itRenders('renders an svg element', async render => {
+      itRenders('an svg element', async render => {
         const e = await render(<svg />);
         expect(e.childNodes.length).toBe(0);
         expect(e.tagName).toBe('svg');
         expect(e.namespaceURI).toBe('http://www.w3.org/2000/svg');
       });
 
-      itRenders('renders svg element with an xlink', async render => {
+      itRenders('svg element with an xlink', async render => {
         let e = await render(<svg><image xlinkHref="http://i.imgur.com/w7GCRPb.png" /></svg>);
         e = e.firstChild;
         expect(e.childNodes.length).toBe(0);
@@ -667,7 +667,7 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.getAttributeNS('http://www.w3.org/1999/xlink', 'href')).toBe('http://i.imgur.com/w7GCRPb.png');
       });
 
-      itRenders('renders a math element', async render => {
+      itRenders('a math element', async render => {
         const e = await render(<math />);
         expect(e.childNodes.length).toBe(0);
         expect(e.tagName).toBe('math');
@@ -676,21 +676,21 @@ describe('ReactDOMServerIntegration', () => {
     });
     // specially wrapped components
     // (see the big switch near the beginning ofReactDOMComponent.mountComponent)
-    itRenders('renders an img', async render => {
+    itRenders('an img', async render => {
       const e = await render(<img />);
       expect(e.childNodes.length).toBe(0);
       expect(e.nextSibling).toBe(null);
       expect(e.tagName).toBe('IMG');
     });
 
-    itRenders('renders a button', async render => {
+    itRenders('a button', async render => {
       const e = await render(<button />);
       expect(e.childNodes.length).toBe(0);
       expect(e.nextSibling).toBe(null);
       expect(e.tagName).toBe('BUTTON');
     });
 
-    itRenders('renders a div with dangerouslySetInnerHTML', async render => {
+    itRenders('a div with dangerouslySetInnerHTML', async render => {
       const e = await render(<div dangerouslySetInnerHTML={{__html:"<span id='child'/>"}} />);
       expect(e.childNodes.length).toBe(1);
       expect(e.firstChild.tagName).toBe('SPAN');
@@ -699,15 +699,15 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     describe('newline-eating elements', function() {
-      itRenders('renders a newline-eating tag with content not starting with \\n', async render => {
+      itRenders('a newline-eating tag with content not starting with \\n', async render => {
         const e = await render(<pre>Hello</pre>);
         expect(e.textContent).toBe('Hello');
       });
-      itRenders('renders a newline-eating tag with content starting with \\n', async render => {
+      itRenders('a newline-eating tag with content starting with \\n', async render => {
         const e = await render(<pre>{'\nHello'}</pre>);
         expect(e.textContent).toBe('\nHello');
       });
-      itRenders('renders a normal tag with content starting with \\n', async render => {
+      itRenders('a normal tag with content starting with \\n', async render => {
         const e = await render(<div>{'\nHello'}</div>);
         expect(e.textContent).toBe('\nHello');
       });
@@ -719,12 +719,12 @@ describe('ReactDOMServerIntegration', () => {
         expectNode(e.firstChild, TEXT_NODE_TYPE, 'foo');
       }
 
-      itRenders('renders stateless components', async render => {
+      itRenders('stateless components', async render => {
         const StatelessComponent = () => <div>foo</div>;
         checkFooDiv(await render(<StatelessComponent />));
       });
 
-      itRenders('renders React.createClass components', async render => {
+      itRenders('React.createClass components', async render => {
         const RccComponent = React.createClass({
           render: function() {
             return <div>foo</div>;
@@ -733,7 +733,7 @@ describe('ReactDOMServerIntegration', () => {
         checkFooDiv(await render(<RccComponent />));
       });
 
-      itRenders('renders ES6 class components', async render => {
+      itRenders('ES6 class components', async render => {
         class ClassComponent extends React.Component {
           render() {
             return <div>foo</div>;
@@ -742,7 +742,7 @@ describe('ReactDOMServerIntegration', () => {
         checkFooDiv(await render(<ClassComponent />));
       });
 
-      itRenders('renders factory components', async render => {
+      itRenders('factory components', async render => {
         const FactoryComponent = () => {
           return {
             render: function() {
@@ -755,7 +755,7 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     describe('component hierarchies', async function() {
-      itRenders('renders single child hierarchies of components', async render => {
+      itRenders('single child hierarchies of components', async render => {
         const Component = (props) => <div>{props.children}</div>;
         let e = await render(
           <Component>
@@ -774,7 +774,7 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.childNodes.length).toBe(0);
       });
 
-      itRenders('renders multi-child hierarchies of components', async render => {
+      itRenders('multi-child hierarchies of components', async render => {
         const Component = (props) => <div>{props.children}</div>;
         const e = await render(
           <Component>
@@ -799,7 +799,7 @@ describe('ReactDOMServerIntegration', () => {
         }
       });
 
-      itRenders('renders a div with a child', async render => {
+      itRenders('a div with a child', async render => {
         const e = await render(<div id="parent"><div id="child" /></div>);
         expect(e.id).toBe('parent');
         expect(e.childNodes.length).toBe(1);
@@ -807,7 +807,7 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.childNodes[0].childNodes.length).toBe(0);
       });
 
-      itRenders('renders a div with multiple children', async render => {
+      itRenders('a div with multiple children', async render => {
         const e = await render(<div id="parent"><div id="child1" /><div id="child2" /></div>);
         expect(e.id).toBe('parent');
         expect(e.childNodes.length).toBe(2);
@@ -817,7 +817,7 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.childNodes[1].childNodes.length).toBe(0);
       });
 
-      itRenders('renders a div with multiple children separated by whitespace', async render => {
+      itRenders('a div with multiple children separated by whitespace', async render => {
         const e = await render(<div id="parent"><div id="child1" /> <div id="child2" /></div>);
         expect(e.id).toBe('parent');
         expect(e.childNodes.length).toBe(5);
@@ -828,7 +828,7 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.childNodes[4].childNodes.length).toBe(0);
       });
 
-      itRenders('renders a div with a child surrounded by whitespace', async render => {
+      itRenders('a div with a child surrounded by whitespace', async render => {
         const e = await render(<div id="parent">  <div id="child" />   </div>); // eslint-disable-line no-multi-spaces
         expect(e.id).toBe('parent');
         expect(e.childNodes.length).toBe(7);
@@ -840,13 +840,13 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     describe('escaping >, <, and &', function() {
-      itRenders('escapes >,<, and & as single child', async render => {
+      itRenders('>,<, and & as single child', async render => {
         const e = await render(<div>{'<span>Text&quot;</span>'}</div>);
         expect(e.childNodes.length).toBe(1);
         expectNode(e.firstChild, TEXT_NODE_TYPE, '<span>Text&quot;</span>');
       });
 
-      itRenders('escapes >,<, and & as multiple children', async render => {
+      itRenders('>,<, and & as multiple children', async render => {
         const e = await render(<div>{'<span>Text1&quot;</span>'}{'<span>Text2&quot;</span>'}</div>);
         expect(e.childNodes.length).toBe(6);
         expectTextNode(e.childNodes[0], '<span>Text1&quot;</span>');
