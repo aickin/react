@@ -880,13 +880,14 @@ describe('ReactDOMServerIntegration', () => {
 
   describe('form controls', function() {
     describe('inputs', function() {
-      itRenders('can render an input with a value', (render) => {
-        return Promise.all([
-          render(<input value="foo" onChange={() => {}} />).then(e =>
-            expect(e.getAttribute('value') || e.value).toBe('foo')),
-          render(<input value="foo" readOnly={true} />).then(e =>
-            expect(e.getAttribute('value') || e.value).toBe('foo')),
-        ]);
+      itRenders('an input with a value and an onChange', render => {
+        return render(<input value="foo" onChange={() => {}} />).then(e =>
+          expect(e.getAttribute('value') || e.value).toBe('foo'));
+      });
+
+      itRenders('an input with a value and readOnly', render => {
+        return render(<input value="foo" readOnly={true} />).then(e =>
+          expect(e.getAttribute('value') || e.value).toBe('foo'));
       });
 
       itRenders('can render an input with a value and no onChange/readOnly', render => {
@@ -919,13 +920,14 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     describe('checkboxes', function() {
-      itRenders('can render a checkbox that is checked', (render) => {
-        return Promise.all([
-          render(<input type="checkbox" checked={true} onChange={() => {}} />)
-            .then(e => expect(e.checked).toBe(true)),
-          render(<input type="checkbox" checked={true} readOnly={true} />)
-            .then(e => expect(e.checked).toBe(true)),
-        ]);
+      itRenders('a checkbox that is checked with an onChange', render => {
+        return render(<input type="checkbox" checked={true} onChange={() => {}} />)
+          .then(e => expect(e.checked).toBe(true));
+      });
+
+      itRenders('a checkbox that is checked with readOnly', render => {
+        return render(<input type="checkbox" checked={true} readOnly={true} />)
+          .then(e => expect(e.checked).toBe(true));
       });
 
       itRenders('can render a checkbox that is checked and no onChange/readOnly', render => {
@@ -960,17 +962,18 @@ describe('ReactDOMServerIntegration', () => {
     describe('textareas', function() {
       // textareas
       // ---------
-      itRenders('can render a textarea with a value', (render) => {
-        return Promise.all([
-          render(<textarea value="foo" onChange={() => {}} />).then(e => {
-            expect(e.getAttribute('value')).toBe(null);
-            expect(e.value).toBe('foo');
-          }),
-          render(<textarea value="foo" readOnly={true} />).then(e => {
-            expect(e.getAttribute('value')).toBe(null);
-            expect(e.value).toBe('foo');
-          }),
-        ]);
+      itRenders('a textarea with a value and an onChange', render => {
+        return render(<textarea value="foo" onChange={() => {}} />).then(e => {
+          expect(e.getAttribute('value')).toBe(null);
+          expect(e.value).toBe('foo');
+        });
+      });
+
+      itRenders('a textarea with a value and readOnly', render => {
+        return render(<textarea value="foo" readOnly={true} />).then(e => {
+          expect(e.getAttribute('value')).toBe(null);
+          expect(e.value).toBe('foo');
+        });
       });
 
       itRenders('can render a textarea with a value and no onChange/readOnly', render => {
@@ -1029,15 +1032,25 @@ describe('ReactDOMServerIntegration', () => {
           expect(option.selected).toBe(selectedValue);
         });
       };
-      itRenders('can render a select with a value', (render) => {
-        return Promise.all([
-          render(<select value="bar" onChange={() => {}}>{options}</select>)
-            .then(e => expectSelectValue(e, ['bar'])),
-          render(<select value="bar" readOnly={true}>{options}</select>)
-            .then(e => expectSelectValue(e, ['bar'])),
-          render(<select value={['bar', 'baz']} multiple={true} readOnly={true}>{options}</select>)
-            .then(e => expectSelectValue(e, ['bar', 'baz'])),
-        ]);
+
+      itRenders('a select with a value and an onChange', render => {
+        return render(<select value="bar" onChange={() => {}}>{options}</select>)
+          .then(e => expectSelectValue(e, ['bar']));
+      });
+
+      itRenders('a select with a value and readOnly', render => {
+        return render(<select value="bar" readOnly={true}>{options}</select>)
+          .then(e => expectSelectValue(e, ['bar']));
+      });
+
+      itRenders('a select with a multiple values and an onChange', render => {
+        return render(<select value={['bar', 'baz']} multiple={true} onChange={() => {}}>{options}</select>)
+          .then(e => expectSelectValue(e, ['bar', 'baz']));
+      });
+
+      itRenders('a select with a multiple values and readOnly', render => {
+        return render(<select value={['bar', 'baz']} multiple={true} readOnly={true}>{options}</select>)
+          .then(e => expectSelectValue(e, ['bar', 'baz']));
       });
 
       itRenders('can render a select with a value and no onChange/readOnly', render => {
