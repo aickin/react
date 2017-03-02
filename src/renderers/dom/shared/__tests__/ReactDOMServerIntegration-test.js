@@ -1175,7 +1175,7 @@ describe('ReactDOMServerIntegration', () => {
   });
 
   describe('lifecycle', function() {
-    itRenders('should call getInitialState for createClass components', (render) => {
+    itRenders('should call getInitialState for createClass components', async render => {
       const Component = React.createClass({
         getInitialState: function() {
           return {text: 'foo'};
@@ -1184,17 +1184,18 @@ describe('ReactDOMServerIntegration', () => {
           return <div>{this.state.text}</div>;
         },
       });
-      return render(<Component />).then(e => expect(e.textContent).toBe('foo'));
+      const e = await render(<Component />);
+      expect(e.textContent).toBe('foo');
     });
   });
 
   describe('context', function() {
-    itRenders('can render context', (render) => {
+    itRenders('can render context', async render => {
       class ClassChildWithContext extends React.Component {
         render() {
           return <div id="classChild">{this.context.text}</div>;
         }
-    }
+      }
       ClassChildWithContext.contextTypes = {text: React.PropTypes.string};
 
       function StatelessChildWithContext(props, context) {
@@ -1243,20 +1244,19 @@ describe('ReactDOMServerIntegration', () => {
             <StatelessChildWithoutContext />
           </div>);
         }
-    }
+      }
       Parent.childContextTypes = {text: React.PropTypes.string };
 
-      return render(<Parent />).then(e => {
-        expect(e.querySelector('#classChild').textContent).toBe('purple');
-        expect(e.querySelector('#statelessChild').textContent).toBe('purple');
-        expect(e.querySelector('#classWoChild').textContent).toBe('');
-        expect(e.querySelector('#statelessWoChild').textContent).toBe('');
-        expect(e.querySelector('#classWrongChild').textContent).toBe('');
-        expect(e.querySelector('#statelessWrongChild').textContent).toBe('');
-      });
+      const e = await render(<Parent />);
+      expect(e.querySelector('#classChild').textContent).toBe('purple');
+      expect(e.querySelector('#statelessChild').textContent).toBe('purple');
+      expect(e.querySelector('#classWoChild').textContent).toBe('');
+      expect(e.querySelector('#statelessWoChild').textContent).toBe('');
+      expect(e.querySelector('#classWrongChild').textContent).toBe('');
+      expect(e.querySelector('#statelessWrongChild').textContent).toBe('');
     });
 
-    itRenders('can pass context through to a grandchild', (render) => {
+    itRenders('can pass context through to a grandchild', async render => {
       class ClassGrandchild extends React.Component {
         render() {
           return <div id="classGrandchild">{this.context.text}</div>;
@@ -1288,17 +1288,16 @@ describe('ReactDOMServerIntegration', () => {
         render() {
           return <div id="parent"><Child /></div>;
         }
-    }
+      }
       Parent.childContextTypes = {text: React.PropTypes.string };
 
-      return render(<Parent />).then(e => {
-        expect(e.querySelector('#childContext').textContent).toBe('');
-        expect(e.querySelector('#statelessGrandchild').textContent).toBe('purple');
-        expect(e.querySelector('#classGrandchild').textContent).toBe('purple');
-      });
+      const e = await render(<Parent />);
+      expect(e.querySelector('#childContext').textContent).toBe('');
+      expect(e.querySelector('#statelessGrandchild').textContent).toBe('purple');
+      expect(e.querySelector('#classGrandchild').textContent).toBe('purple');
     });
 
-    itRenders('should let a child context override a parent context', (render) => {
+    itRenders('should let a child context override a parent context', async render => {
       class Parent extends React.Component {
         getChildContext() {
           return {text: 'purple'};
@@ -1324,10 +1323,11 @@ describe('ReactDOMServerIntegration', () => {
       };
       Grandchild.contextTypes = {text: React.PropTypes.string};
 
-      return render(<Parent />).then(e => expect(e.textContent).toBe('red'));
+      const e = await render(<Parent />);
+      expect(e.textContent).toBe('red');
     });
 
-    itRenders('should merge a child context with a parent context', (render) => {
+    itRenders('should merge a child context with a parent context', async render => {
       class Parent extends React.Component {
         getChildContext() {
           return {text1: 'purple'};
@@ -1353,13 +1353,12 @@ describe('ReactDOMServerIntegration', () => {
       };
       Grandchild.contextTypes = {text1: React.PropTypes.string, text2: React.PropTypes.string};
 
-      return render(<Parent />).then(e => {
-        expect(e.querySelector('#first').textContent).toBe('purple');
-        expect(e.querySelector('#second').textContent).toBe('red');
-      });
+      const e = await render(<Parent />);
+      expect(e.querySelector('#first').textContent).toBe('purple');
+      expect(e.querySelector('#second').textContent).toBe('red');
     });
 
-    itRenders('should run componentWillMount before getChildContext', (render) => {
+    itRenders('should run componentWillMount before getChildContext', async render => {
       class Parent extends React.Component {
         getChildContext() {
           return {text: this.state.text};
@@ -1378,7 +1377,8 @@ describe('ReactDOMServerIntegration', () => {
       };
       Child.contextTypes = {text: React.PropTypes.string};
 
-      return render(<Parent />).then(e => expect(e.textContent).toBe('foo'));
+      const e = await render(<Parent />);
+      expect(e.textContent).toBe('foo');
     });
 
 
@@ -1410,58 +1410,54 @@ describe('ReactDOMServerIntegration', () => {
 
   describe('refs', function() {
     // refs
-    it('should reconnect element with ref on server but not on client', () => {
+    it('should reconnect element with ref on server but not on client', async () => {
       let refCount = 0;
       class RefsComponent extends React.Component {
         render() {
           return <div ref={(e) => refCount++} />;
         }
       }
-      return expectMarkupMatch(<RefsComponent />, <div />)
-        .then(() => expect(refCount).toBe(0));
+      await expectMarkupMatch(<RefsComponent />, <div />);
+      expect(refCount).toBe(0);
     });
 
-    it('should reconnect element with ref on client but not on server', () => {
+    it('should reconnect element with ref on client but not on server', async () => {
       let refCount = 0;
       class RefsComponent extends React.Component {
         render() {
           return <div ref={(e) => refCount++} />;
         }
       }
-      return expectMarkupMatch(<div />, <RefsComponent />)
-        .then(() => expect(refCount).toBe(1));
+      await expectMarkupMatch(<div />, <RefsComponent />);
+      expect(refCount).toBe(1);
     });
 
-    it('should send the correct element to ref functions on client and not call them on server', () => {
+    it('should send the correct element to ref functions on client and not call them on server', async () => {
       let refElement = null;
       class RefsComponent extends React.Component {
         render() {
           return <div ref={(e) => refElement = e} />;
         }
       }
-      return clientRenderOnServerString(<RefsComponent />).then(element => {
-        expect(refElement).not.toBe(null);
-        expect(refElement).toBe(element);
-      });
+      const e = await clientRenderOnServerString(<RefsComponent />);
+      expect(refElement).not.toBe(null);
+      expect(refElement).toBe(e);
     });
 
-    it('should have string refs on client when rendered over server markup', () => {
+    it('should have string refs on client when rendered over server markup', async () => {
       class RefsComponent extends React.Component {
         render() {
           return <div ref="myDiv" />;
         }
       }
 
-      return new Promise((resolve) => {
-        const markup = ReactDOMServer.renderToString(<RefsComponent />);
-        const root = document.createElement('div');
-        root.innerHTML = markup;
-        let component = null;
-        ReactDOM.render(<RefsComponent ref={e => component = e} />, root, () => {
-          expect(component.refs.myDiv).toBe(root.firstChild);
-          resolve();
-        });
-      });
+      const markup = ReactDOMServer.renderToString(<RefsComponent />);
+      const root = document.createElement('div');
+      root.innerHTML = markup;
+      let component = null;
+      resetModules();
+      await asyncReactDOMRender(<RefsComponent ref={e => component = e} />, root);
+      expect(component.refs.myDiv).toBe(root.firstChild);
     });
 
   });
