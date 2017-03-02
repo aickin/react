@@ -480,214 +480,237 @@ describe('ReactDOMServerIntegration', () => {
     }
 
     describe('elements with text children', function() {
-      itRenders('renders a div with text', render =>
-        render(<div>Text</div>).then(e => {
-          expect(e.tagName.toLowerCase()).toBe('div');
-          expect(e.childNodes.length).toBe(1);
-          expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
-        }));
-      itRenders('renders a div with text with flanking whitespace', render =>
-        render(<div>  Text </div>).then(e => {
-          expect(e.childNodes.length).toBe(1);
-          expectNode(e.childNodes[0], TEXT_NODE_TYPE, '  Text ');
-        }));
-      itRenders('renders a div with text', render =>
-        render(<div>{'Text'}</div>).then(e => {
-          expect(e.childNodes.length).toBe(1);
-          expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
-        }));
-      itRenders('renders a div with blank text child', render =>
-        render(<div>{''}</div>).then(e => {
-          expect(e.childNodes.length).toBe(0);
-        }));
-      itRenders('renders a div with blank text children', render =>
-        render(<div>{''}{''}{''}</div>).then(e => {
-          expect(e.childNodes.length).toBe(6);
-          expectTextNode(e.childNodes[0], '');
-          expectTextNode(e.childNodes[2], '');
-          expectTextNode(e.childNodes[4], '');
-        }));
-      itRenders('renders a div with whitespace children', render =>
-        render(<div>{' '}{' '}{' '}</div>).then(e => {
-          expect(e.childNodes.length).toBe(9);
-          expectTextNode(e.childNodes[0], ' ');
-          expectTextNode(e.childNodes[3], ' ');
-          expectTextNode(e.childNodes[6], ' ');
-        }));
-      itRenders('renders a div with text sibling to a node', render =>
-        render(<div>Text<span>More Text</span></div>).then(e => {
-          expect(e.childNodes.length).toBe(4);
-          expectTextNode(e.childNodes[0], 'Text');
-          expect(e.childNodes[3].tagName.toLowerCase()).toBe('span');
-          expect(e.childNodes[3].childNodes.length).toBe(1);
-          expectNode(e.childNodes[3].firstChild, TEXT_NODE_TYPE, 'More Text');
-        }));
-      itRenders('renders a non-standard element with text', render =>
-        render(<nonstandard>Text</nonstandard>).then(e => {
-          expect(e.tagName.toLowerCase()).toBe('nonstandard');
-          expect(e.childNodes.length).toBe(1);
-          expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
-        }));
-      itRenders('renders a custom element with text', render =>
-        render(<custom-element>Text</custom-element>).then(e => {
-          expect(e.tagName.toLowerCase()).toBe('custom-element');
-          expect(e.childNodes.length).toBe(1);
-          expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
-        }));
-      itRenders('renders leading blank children with comments when there are multiple children', (render) => {
-        return render(<div>{''}foo</div>).then(e => {
-          expect(e.childNodes.length).toBe(5);
-          expectTextNode(e.childNodes[0], '');
-          expectTextNode(e.childNodes[2], 'foo');
-        });
+      itRenders('renders a div with text', async render => {
+        const e = await render(<div>Text</div>);
+        expect(e.tagName.toLowerCase()).toBe('div');
+        expect(e.childNodes.length).toBe(1);
+        expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
       });
 
-      itRenders('renders trailing blank children with comments when there are multiple children', (render) => {
-        return render(<div>foo{''}</div>).then(e => {
-          expect(e.childNodes.length).toBe(5);
-          expectTextNode(e.childNodes[0], 'foo');
-          expectTextNode(e.childNodes[3], '');
-        });
+      itRenders('renders a div with text with flanking whitespace', async render => {
+        const e = await render(<div>  Text </div>);
+        expect(e.childNodes.length).toBe(1);
+        expectNode(e.childNodes[0], TEXT_NODE_TYPE, '  Text ');
       });
 
-      itRenders('renders an element with just one text child without comments', (render) => {
-        return render(<div>foo</div>).then(e => {
-          expect(e.childNodes.length).toBe(1);
-          expectNode(e.firstChild, TEXT_NODE_TYPE, 'foo');
-        });
+      itRenders('renders a div with text', async render => {
+        const e = await render(<div>{'Text'}</div>);
+        expect(e.childNodes.length).toBe(1);
+        expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
       });
 
-      itRenders('renders an element with two text children with comments', (render) => {
-        return render(<div>{'foo'}{'bar'}</div>).then(e => {
-          expect(e.childNodes.length).toBe(6);
-          expectTextNode(e.childNodes[0], 'foo');
-          expectTextNode(e.childNodes[3], 'bar');
-        });
+      itRenders('renders a div with blank text child', async render => {
+        const e = await render(<div>{''}</div>);
+        expect(e.childNodes.length).toBe(0);
+      });
+
+      itRenders('renders a div with blank text children', async render => {
+        const e = await render(<div>{''}{''}{''}</div>);
+        expect(e.childNodes.length).toBe(6);
+        expectTextNode(e.childNodes[0], '');
+        expectTextNode(e.childNodes[2], '');
+        expectTextNode(e.childNodes[4], '');
+      });
+
+      itRenders('renders a div with whitespace children', async render => {
+        const e = await render(<div>{' '}{' '}{' '}</div>);
+        expect(e.childNodes.length).toBe(9);
+        expectTextNode(e.childNodes[0], ' ');
+        expectTextNode(e.childNodes[3], ' ');
+        expectTextNode(e.childNodes[6], ' ');
+      });
+
+      itRenders('renders a div with text sibling to a node', async render => {
+        const e = await render(<div>Text<span>More Text</span></div>);
+        expect(e.childNodes.length).toBe(4);
+        expectTextNode(e.childNodes[0], 'Text');
+        expect(e.childNodes[3].tagName.toLowerCase()).toBe('span');
+        expect(e.childNodes[3].childNodes.length).toBe(1);
+        expectNode(e.childNodes[3].firstChild, TEXT_NODE_TYPE, 'More Text');
+      });
+
+      itRenders('renders a non-standard element with text', async render => {
+        const e = await render(<nonstandard>Text</nonstandard>);
+        expect(e.tagName.toLowerCase()).toBe('nonstandard');
+        expect(e.childNodes.length).toBe(1);
+        expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
+      });
+
+      itRenders('renders a custom element with text', async render => {
+        const e = await render(<custom-element>Text</custom-element>);
+        expect(e.tagName.toLowerCase()).toBe('custom-element');
+        expect(e.childNodes.length).toBe(1);
+        expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
+      });
+
+      itRenders('renders leading blank children with comments when there are multiple children', async render => {
+        const e = await render(<div>{''}foo</div>);
+        expect(e.childNodes.length).toBe(5);
+        expectTextNode(e.childNodes[0], '');
+        expectTextNode(e.childNodes[2], 'foo');
+      });
+
+      itRenders('renders trailing blank children with comments when there are multiple children', async render => {
+        const e = await render(<div>foo{''}</div>);
+        expect(e.childNodes.length).toBe(5);
+        expectTextNode(e.childNodes[0], 'foo');
+        expectTextNode(e.childNodes[3], '');
+      });
+
+      itRenders('renders an element with just one text child without comments', async render => {
+        const e = await render(<div>foo</div>);
+        expect(e.childNodes.length).toBe(1);
+        expectNode(e.firstChild, TEXT_NODE_TYPE, 'foo');
+      });
+
+      itRenders('renders an element with two text children with comments', async render => {
+        const e = await render(<div>{'foo'}{'bar'}</div>);
+        expect(e.childNodes.length).toBe(6);
+        expectTextNode(e.childNodes[0], 'foo');
+        expectTextNode(e.childNodes[3], 'bar');
       });
     });
 
     describe('elements with number children', function() {
-      itRenders('renders a number as single child',
-        render => render(<div>{3}</div>).then(e => expect(e.textContent).toBe('3')));
+      itRenders('renders a number as single child', async render => {
+        const e = await render(<div>{3}</div>);
+        expect(e.textContent).toBe('3');
+      });
 
       // zero is falsey, so it could look like no children if the code isn't careful.
-      itRenders('renders zero as single child',
-        render => render(<div>{0}</div>).then(e => expect(e.textContent).toBe('0')));
+      itRenders('renders zero as single child', async render => {
+        const e = await render(<div>{0}</div>);
+        expect(e.textContent).toBe('0');
+      });
 
-      itRenders('renders an element with number and text children with comments', (render) => {
-        return render(<div>{'foo'}{40}</div>).then(e => {
-          expect(e.childNodes.length).toBe(6);
-          expectTextNode(e.childNodes[0], 'foo');
-          expectTextNode(e.childNodes[3], '40');
-        });
+      itRenders('renders an element with number and text children with comments', async render => {
+        const e = await render(<div>{'foo'}{40}</div>);
+        expect(e.childNodes.length).toBe(6);
+        expectTextNode(e.childNodes[0], 'foo');
+        expectTextNode(e.childNodes[3], '40');
       });
     });
 
     describe('null, false, and undefined children', function() {
-      itRenders('renders null single child as blank',
-        render => render(<div>{null}</div>).then(e => expect(e.childNodes.length).toBe(0)));
-      itRenders('renders false single child as blank',
-        render => render(<div>{false}</div>).then(e => expect(e.childNodes.length).toBe(0)));
-      itRenders('renders undefined single child as blank',
-        render => render(<div>{undefined}</div>).then(e => expect(e.childNodes.length).toBe(0)));
-      itRenders('renders a null component as empty', (render) => {
-        const NullComponent = () => null;
-        return render(<NullComponent />).then(e => expectEmptyNode(e));
+      itRenders('renders null single child as blank', async render => {
+        const e = await render(<div>{null}</div>);
+        expect(e.childNodes.length).toBe(0);
       });
 
-      itRenders('renders a null component children as empty', (render) => {
-        const NullComponent = () => null;
-        return render(<div><NullComponent /></div>).then(e => {
-          expect(e.childNodes.length).toBe(1);
-          expectEmptyNode(e.firstChild);
-        });
+      itRenders('renders false single child as blank', async render => {
+        const e = await render(<div>{false}</div>);
+        expect(e.childNodes.length).toBe(0);
       });
 
-      itRenders('renders a false component as empty', (render) => {
+      itRenders('renders undefined single child as blank', async render => {
+        const e = await render(<div>{undefined}</div>);
+        expect(e.childNodes.length).toBe(0);
+      });
+
+      itRenders('renders a null component as empty', async render => {
+        const NullComponent = () => null;
+        const e = await render(<NullComponent />);
+        expectEmptyNode(e);
+      });
+
+      itRenders('renders a null component children as empty', async render => {
+        const NullComponent = () => null;
+        const e = await render(<div><NullComponent /></div>);
+        expect(e.childNodes.length).toBe(1);
+        expectEmptyNode(e.firstChild);
+      });
+
+      itRenders('renders a false component as empty', async render => {
         const FalseComponent = () => false;
-        return render(<FalseComponent />).then(e => expectEmptyNode(e));
+        const e = await render(<FalseComponent />);
+        expectEmptyNode(e);
       });
 
-      itRenders('renders null children as blank', (render) => {
-        return render(<div>{null}foo</div>).then(e => {
-          expect(e.childNodes.length).toBe(3);
-          expectTextNode(e.childNodes[0], 'foo');
-        });
+      itRenders('renders null children as blank', async render => {
+        const e = await render(<div>{null}foo</div>);
+        expect(e.childNodes.length).toBe(3);
+        expectTextNode(e.childNodes[0], 'foo');
       });
 
-      itRenders('renders false children as blank', (render) => {
-        return render(<div>{false}foo</div>).then(e => {
-          expect(e.childNodes.length).toBe(3);
-          expectTextNode(e.childNodes[0], 'foo');
-        });
+      itRenders('renders false children as blank', async render => {
+        const e = await render(<div>{false}foo</div>);
+        expect(e.childNodes.length).toBe(3);
+        expectTextNode(e.childNodes[0], 'foo');
       });
 
-      itRenders('renders null and false children together as blank', (render) => {
-        return render(<div>{false}{null}foo{null}{false}</div>).then(e => {
-          expect(e.childNodes.length).toBe(3);
-          expectTextNode(e.childNodes[0], 'foo');
-        });
+      itRenders('renders null and false children together as blank', async render => {
+        const e = await render(<div>{false}{null}foo{null}{false}</div>);
+        expect(e.childNodes.length).toBe(3);
+        expectTextNode(e.childNodes[0], 'foo');
       });
 
-      itRenders('renders only null and false children as blank', (render) => {
-        return render(<div>{false}{null}{null}{false}</div>).then(e => {
-          expect(e.childNodes.length).toBe(0);
-        });
+      itRenders('renders only null and false children as blank', async render => {
+        const e = await render(<div>{false}{null}{null}{false}</div>);
+        expect(e.childNodes.length).toBe(0);
       });
     });
 
     describe('elements with implicit namespaces', function() {
-      itRenders('renders an svg element', render =>
-        render(<svg />).then(e => {
-          expect(e.childNodes.length).toBe(0);
-          expect(e.tagName.toLowerCase()).toBe('svg');
-          expect(e.namespaceURI).toBe('http://www.w3.org/2000/svg');
-        }));
-      itRenders('renders svg element with an xlink', render =>
-        render(<svg><image xlinkHref="http://i.imgur.com/w7GCRPb.png" /></svg>).then(e => {
-          e = e.firstChild;
-          expect(e.childNodes.length).toBe(0);
-          expect(e.tagName.toLowerCase()).toBe('image');
-          expect(e.namespaceURI).toBe('http://www.w3.org/2000/svg');
-          expect(e.getAttributeNS('http://www.w3.org/1999/xlink', 'href')).toBe('http://i.imgur.com/w7GCRPb.png');
-        }));
-      itRenders('renders a math element', render =>
-        render(<math />).then(e => {
-          expect(e.childNodes.length).toBe(0);
-          expect(e.tagName.toLowerCase()).toBe('math');
-          expect(e.namespaceURI).toBe('http://www.w3.org/1998/Math/MathML');
-        }));
+      itRenders('renders an svg element', async render => {
+        const e = await render(<svg />);
+        expect(e.childNodes.length).toBe(0);
+        expect(e.tagName.toLowerCase()).toBe('svg');
+        expect(e.namespaceURI).toBe('http://www.w3.org/2000/svg');
+      });
+
+      itRenders('renders svg element with an xlink', async render => {
+        let e = await render(<svg><image xlinkHref="http://i.imgur.com/w7GCRPb.png" /></svg>);
+        e = e.firstChild;
+        expect(e.childNodes.length).toBe(0);
+        expect(e.tagName.toLowerCase()).toBe('image');
+        expect(e.namespaceURI).toBe('http://www.w3.org/2000/svg');
+        expect(e.getAttributeNS('http://www.w3.org/1999/xlink', 'href')).toBe('http://i.imgur.com/w7GCRPb.png');
+      });
+
+      itRenders('renders a math element', async render => {
+        const e = await render(<math />);
+        expect(e.childNodes.length).toBe(0);
+        expect(e.tagName.toLowerCase()).toBe('math');
+        expect(e.namespaceURI).toBe('http://www.w3.org/1998/Math/MathML');
+      });
     });
     // specially wrapped components
     // (see the big switch near the beginning ofReactDOMComponent.mountComponent)
-    itRenders('renders an img', render =>
-      render(<img />).then(e => {
-        expect(e.childNodes.length).toBe(0);
-        expect(e.nextSibling).toBe(null);
-        expect(e.tagName.toLowerCase()).toBe('img');
-      }));
-    itRenders('renders a button', render =>
-      render(<button />).then(e => {
-        expect(e.childNodes.length).toBe(0);
-        expect(e.nextSibling).toBe(null);
-        expect(e.tagName.toLowerCase()).toBe('button');
-      }));
+    itRenders('renders an img', async render => {
+      const e = await render(<img />);
+      expect(e.childNodes.length).toBe(0);
+      expect(e.nextSibling).toBe(null);
+      expect(e.tagName.toLowerCase()).toBe('img');
+    });
 
-    itRenders('renders a div with dangerouslySetInnerHTML',
-      render => render(<div dangerouslySetInnerHTML={{__html:"<span id='child'/>"}} />).then(e => {
-        expect(e.childNodes.length).toBe(1);
-        expect(e.firstChild.tagName.toLowerCase()).toBe('span');
-        expect(e.firstChild.getAttribute('id')).toBe('child');
-        expect(e.firstChild.childNodes.length).toBe(0);
-      }));
+    itRenders('renders a button', async render => {
+      const e = await render(<button />);
+      expect(e.childNodes.length).toBe(0);
+      expect(e.nextSibling).toBe(null);
+      expect(e.tagName.toLowerCase()).toBe('button');
+    });
+
+    itRenders('renders a div with dangerouslySetInnerHTML', async render => {
+      const e = await render(<div dangerouslySetInnerHTML={{__html:"<span id='child'/>"}} />);
+      expect(e.childNodes.length).toBe(1);
+      expect(e.firstChild.tagName.toLowerCase()).toBe('span');
+      expect(e.firstChild.getAttribute('id')).toBe('child');
+      expect(e.firstChild.childNodes.length).toBe(0);
+    });
 
     describe('newline-eating elements', function() {
-      itRenders('renders a newline-eating tag with content not starting with \\n',
-        render => render(<pre>Hello</pre>).then(e => expect(e.textContent).toBe('Hello')));
-      itRenders('renders a newline-eating tag with content starting with \\n',
-        render => render(<pre>{'\nHello'}</pre>).then(e => expect(e.textContent).toBe('\nHello')));
-      itRenders('renders a normal tag with content starting with \\n',
-        render => render(<div>{'\nHello'}</div>).then(e => expect(e.textContent).toBe('\nHello')));
+      itRenders('renders a newline-eating tag with content not starting with \\n', async render => {
+        const e = await render(<pre>Hello</pre>);
+        expect(e.textContent).toBe('Hello');
+      });
+      itRenders('renders a newline-eating tag with content starting with \\n', async render => {
+        const e = await render(<pre>{'\nHello'}</pre>);
+        expect(e.textContent).toBe('\nHello');
+      });
+      itRenders('renders a normal tag with content starting with \\n', async render => {
+        const e = await render(<div>{'\nHello'}</div>);
+        expect(e.textContent).toBe('\nHello');
+      });
     });
 
     describe('different component implementations', function() {
@@ -696,30 +719,30 @@ describe('ReactDOMServerIntegration', () => {
         expectNode(e.firstChild, TEXT_NODE_TYPE, 'foo');
       }
 
-      itRenders('renders stateless components', render => {
+      itRenders('renders stateless components', async render => {
         const StatelessComponent = () => <div>foo</div>;
-        return render(<StatelessComponent />).then(checkFooDiv);
+        checkFooDiv(await render(<StatelessComponent />));
       });
 
-      itRenders('renders React.createClass components', render => {
+      itRenders('renders React.createClass components', async render => {
         const RccComponent = React.createClass({
           render: function() {
             return <div>foo</div>;
           },
         });
-        return render(<RccComponent />).then(checkFooDiv);
+        checkFooDiv(await render(<RccComponent />));
       });
 
-      itRenders('renders ES6 class components', render => {
+      itRenders('renders ES6 class components', async render => {
         class ClassComponent extends React.Component {
           render() {
             return <div>foo</div>;
           }
         }
-        return render(<ClassComponent />).then(checkFooDiv);
+        checkFooDiv(await render(<ClassComponent />));
       });
 
-      itRenders('renders factory components', render => {
+      itRenders('renders factory components', async render => {
         const FactoryComponent = () => {
           return {
             render: function() {
@@ -727,35 +750,33 @@ describe('ReactDOMServerIntegration', () => {
             },
           };
         };
-        return render(<FactoryComponent />).then(checkFooDiv);
+        checkFooDiv(await render(<FactoryComponent />));
       });
     });
 
-    describe('component hierarchies', function() {
-      itRenders('renders single child hierarchies of components', render => {
+    describe('component hierarchies', async function() {
+      itRenders('renders single child hierarchies of components', async render => {
         const Component = (props) => <div>{props.children}</div>;
-        return render(
+        let e = await render(
           <Component>
             <Component>
               <Component>
                 <Component />
               </Component>
             </Component>
-          </Component>)
-          .then(element => {
-            for (var i = 0; i < 3; i++) {
-              expect(element.tagName.toLowerCase()).toBe('div');
-              expect(element.childNodes.length).toBe(1);
-              element = element.firstChild;
-            }
-            expect(element.tagName.toLowerCase()).toBe('div');
-            expect(element.childNodes.length).toBe(0);
-          });
+          </Component>);
+        for (var i = 0; i < 3; i++) {
+          expect(e.tagName.toLowerCase()).toBe('div');
+          expect(e.childNodes.length).toBe(1);
+          e = e.firstChild;
+        }
+        expect(e.tagName.toLowerCase()).toBe('div');
+        expect(e.childNodes.length).toBe(0);
       });
 
-      itRenders('renders multi-child hierarchies of components', render => {
+      itRenders('renders multi-child hierarchies of components', async render => {
         const Component = (props) => <div>{props.children}</div>;
-        return render(
+        const e = await render(
           <Component>
             <Component>
               <Component /><Component />
@@ -763,91 +784,90 @@ describe('ReactDOMServerIntegration', () => {
             <Component>
               <Component /><Component />
             </Component>
-          </Component>)
-          .then(element => {
-            expect(element.tagName.toLowerCase()).toBe('div');
-            expect(element.childNodes.length).toBe(2);
-            for (var i = 0; i < 2; i++) {
-              var child = element.childNodes[i];
-              expect(child.tagName.toLowerCase()).toBe('div');
-              expect(child.childNodes.length).toBe(2);
-              for (var j = 0; j < 2; j++) {
-                var grandchild = child.childNodes[j];
-                expect(grandchild.tagName.toLowerCase()).toBe('div');
-                expect(grandchild.childNodes.length).toBe(0);
-              }
-            }
-          });
+          </Component>);
+        expect(e.tagName.toLowerCase()).toBe('div');
+        expect(e.childNodes.length).toBe(2);
+        for (var i = 0; i < 2; i++) {
+          var child = e.childNodes[i];
+          expect(child.tagName.toLowerCase()).toBe('div');
+          expect(child.childNodes.length).toBe(2);
+          for (var j = 0; j < 2; j++) {
+            var grandchild = child.childNodes[j];
+            expect(grandchild.tagName.toLowerCase()).toBe('div');
+            expect(grandchild.childNodes.length).toBe(0);
+          }
+        }
       });
 
-      itRenders('renders a div with a child', render =>
-        render(<div id="parent"><div id="child" /></div>).then(e => {
-          expect(e.id).toBe('parent');
-          expect(e.childNodes.length).toBe(1);
-          expect(e.childNodes[0].id).toBe('child');
-          expect(e.childNodes[0].childNodes.length).toBe(0);
-        }));
-      itRenders('renders a div with multiple children', render =>
-        render(<div id="parent"><div id="child1" /><div id="child2" /></div>).then(e => {
-          expect(e.id).toBe('parent');
-          expect(e.childNodes.length).toBe(2);
-          expect(e.childNodes[0].id).toBe('child1');
-          expect(e.childNodes[0].childNodes.length).toBe(0);
-          expect(e.childNodes[1].id).toBe('child2');
-          expect(e.childNodes[1].childNodes.length).toBe(0);
-        }));
-      itRenders('renders a div with multiple children separated by whitespace', render =>
-        render(<div id="parent"><div id="child1" /> <div id="child2" /></div>).then(e => {
-          expect(e.id).toBe('parent');
-          expect(e.childNodes.length).toBe(5);
-          expect(e.childNodes[0].id).toBe('child1');
-          expect(e.childNodes[0].childNodes.length).toBe(0);
-          expectTextNode(e.childNodes[1], ' ');
-          expect(e.childNodes[4].id).toBe('child2');
-          expect(e.childNodes[4].childNodes.length).toBe(0);
-        }));
-      itRenders('renders a div with a child surrounded by whitespace', render =>
-        render(<div id="parent">  <div id="child" />   </div>).then(e => { // eslint-disable-line no-multi-spaces
-          expect(e.id).toBe('parent');
-          expect(e.childNodes.length).toBe(7);
-          expectTextNode(e.childNodes[0], '  ');
-          expect(e.childNodes[3].id).toBe('child');
-          expect(e.childNodes[3].childNodes.length).toBe(0);
-          expectTextNode(e.childNodes[4], '   ');
-        }));
+      itRenders('renders a div with a child', async render => {
+        const e = await render(<div id="parent"><div id="child" /></div>);
+        expect(e.id).toBe('parent');
+        expect(e.childNodes.length).toBe(1);
+        expect(e.childNodes[0].id).toBe('child');
+        expect(e.childNodes[0].childNodes.length).toBe(0);
+      });
+
+      itRenders('renders a div with multiple children', async render => {
+        const e = await render(<div id="parent"><div id="child1" /><div id="child2" /></div>);
+        expect(e.id).toBe('parent');
+        expect(e.childNodes.length).toBe(2);
+        expect(e.childNodes[0].id).toBe('child1');
+        expect(e.childNodes[0].childNodes.length).toBe(0);
+        expect(e.childNodes[1].id).toBe('child2');
+        expect(e.childNodes[1].childNodes.length).toBe(0);
+      });
+
+      itRenders('renders a div with multiple children separated by whitespace', async render => {
+        const e = await render(<div id="parent"><div id="child1" /> <div id="child2" /></div>);
+        expect(e.id).toBe('parent');
+        expect(e.childNodes.length).toBe(5);
+        expect(e.childNodes[0].id).toBe('child1');
+        expect(e.childNodes[0].childNodes.length).toBe(0);
+        expectTextNode(e.childNodes[1], ' ');
+        expect(e.childNodes[4].id).toBe('child2');
+        expect(e.childNodes[4].childNodes.length).toBe(0);
+      });
+
+      itRenders('renders a div with a child surrounded by whitespace', async render => {
+        const e = await render(<div id="parent">  <div id="child" />   </div>); // eslint-disable-line no-multi-spaces
+        expect(e.id).toBe('parent');
+        expect(e.childNodes.length).toBe(7);
+        expectTextNode(e.childNodes[0], '  ');
+        expect(e.childNodes[3].id).toBe('child');
+        expect(e.childNodes[3].childNodes.length).toBe(0);
+        expectTextNode(e.childNodes[4], '   ');
+      });
     });
 
     describe('escaping >, <, and &', function() {
-      itRenders('escapes >,<, and & as single child', render => {
-        return render(<div>{'<span>Text&quot;</span>'}</div>).then(e => {
-          expect(e.childNodes.length).toBe(1);
-          expectNode(e.firstChild, TEXT_NODE_TYPE, '<span>Text&quot;</span>');
-        });
+      itRenders('escapes >,<, and & as single child', async render => {
+        const e = await render(<div>{'<span>Text&quot;</span>'}</div>);
+        expect(e.childNodes.length).toBe(1);
+        expectNode(e.firstChild, TEXT_NODE_TYPE, '<span>Text&quot;</span>');
       });
 
-      itRenders('escapes >,<, and & as multiple children', render => {
-        return render(<div>{'<span>Text1&quot;</span>'}{'<span>Text2&quot;</span>'}</div>).then(e => {
-          expect(e.childNodes.length).toBe(6);
-          expectTextNode(e.childNodes[0], '<span>Text1&quot;</span>');
-          expectTextNode(e.childNodes[3], '<span>Text2&quot;</span>');
-        });
+      itRenders('escapes >,<, and & as multiple children', async render => {
+        const e = await render(<div>{'<span>Text1&quot;</span>'}{'<span>Text2&quot;</span>'}</div>);
+        expect(e.childNodes.length).toBe(6);
+        expectTextNode(e.childNodes[0], '<span>Text1&quot;</span>');
+        expectTextNode(e.childNodes[3], '<span>Text2&quot;</span>');
       });
     });
 
     describe('components that throw errors', function() {
-      itThrowsOnRender('throws rendering a string component', (render) => {
+      itThrowsOnRender('throws rendering a string component', async render => {
         const StringComponent = () => 'foo';
-        return render(<StringComponent />, 1);
+        await render(<StringComponent />, 1);
       });
 
-      itThrowsOnRender('throws rendering an undefined component', (render) => {
+      itThrowsOnRender('throws rendering an undefined component', async render => {
         const UndefinedComponent = () => undefined;
-        return render(<UndefinedComponent />, 1);
+        await render(<UndefinedComponent />, 1);
       });
 
-      itThrowsOnRender('throws rendering a number component', (render) => {
+      itThrowsOnRender('throws rendering a number component', async render => {
         const NumberComponent = () => 54;
-        return render(<NumberComponent />, 1);
+        await render(<NumberComponent />, 1);
       });
 
       itThrowsOnRender('throws when rendering null', render => render(null));
