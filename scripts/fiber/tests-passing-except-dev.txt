@@ -174,11 +174,9 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders no key attribute with client render on top of bad server markup
 * renders no dangerouslySetInnerHTML attribute with client render on top of bad server markup
 * renders no unknown attributes with server string render
-* renders no unknown attributes with client render on top of good server markup
 * renders no unknown attributes with client render on top of bad server markup
 * renders unknown data- attributes with client render on top of bad server markup
 * renders no unknown attributes for non-standard elements with server string render
-* renders no unknown attributes for non-standard elements with client render on top of good server markup
 * renders no unknown attributes for non-standard elements with client render on top of bad server markup
 * renders unknown attributes for custom elements with client render on top of bad server markup
 * renders unknown attributes for custom elements using is with client render on top of bad server markup
@@ -220,22 +218,28 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * throws when rendering an undefined component with client render on top of bad server markup
 * throws when rendering a number component with clean client render
 * throws when rendering a number component with client render on top of bad server markup
-* renders can render an input with a value with client render on top of bad server markup
+* renders an input with a value and an onChange with client render on top of bad server markup
+* renders an input with a value and readOnly with client render on top of bad server markup
 * renders can render an input with a value and no onChange/readOnly with client render on top of bad server markup
 * renders can render an input with a defaultValue with client render on top of bad server markup
 * renders can render an input with both a value and defaultValue part 1 with client render on top of bad server markup
 * renders can render an input with both a value and defaultValue part 2 with client render on top of bad server markup
-* renders can render a checkbox that is checked with client render on top of bad server markup
+* renders a checkbox that is checked with an onChange with client render on top of bad server markup
+* renders a checkbox that is checked with readOnly with client render on top of bad server markup
 * renders can render a checkbox that is checked and no onChange/readOnly with client render on top of bad server markup
 * renders can render a checkbox with defaultChecked with client render on top of bad server markup
 * renders can render a checkbox with both a checked and defaultChecked part 1 with client render on top of bad server markup
 * renders can render a checkbox with both a checked and defaultChecked part 2 with client render on top of bad server markup
-* renders can render a textarea with a value with client render on top of bad server markup
+* renders a textarea with a value and an onChange with client render on top of bad server markup
+* renders a textarea with a value and readOnly with client render on top of bad server markup
 * renders can render a textarea with a value and no onChange/readOnly with client render on top of bad server markup
 * renders can render a textarea with a defaultValue with client render on top of bad server markup
 * renders can render a textarea with both a value and defaultValue part 1 with client render on top of bad server markup
 * renders can render a textarea with both a value and defaultValue part 2 with client render on top of bad server markup
-* renders can render a select with a value with client render on top of bad server markup
+* renders a select with a value and an onChange with client render on top of bad server markup
+* renders a select with a value and readOnly with client render on top of bad server markup
+* renders a select with a multiple values and an onChange with client render on top of bad server markup
+* renders a select with a multiple values and readOnly with client render on top of bad server markup
 * renders can render a select with a value and no onChange/readOnly with client render on top of bad server markup
 * renders can render a select with a defaultValue with client render on top of bad server markup
 * renders can render a select with both a value and defaultValue part 1 with client render on top of bad server markup
