@@ -158,11 +158,10 @@ function itThrowsWhenRendering(desc, testFn) {
      () => testFn((element, warningCount = 0) => clientRenderOnBadMarkup(element, warningCount - 1)));
 }
 
-function testMarkupMatch(serverElement, clientElement, shouldMatch, errorCount = 0) {
-  return serverRender(serverElement, errorCount).then(domElement => {
-    resetModules();
-    return renderIntoDom(clientElement, domElement.parentNode, errorCount + (shouldMatch ? 0 : 1));
-  });
+async function testMarkupMatch(serverElement, clientElement, shouldMatch, errorCount = 0) {
+  const domElement = await serverRender(serverElement, errorCount);
+  resetModules();
+  return renderIntoDom(clientElement, domElement.parentNode, errorCount + (shouldMatch ? 0 : 1));
 }
 
 function expectMarkupMatch(serverElement, clientElement, errorCount = 0) {
@@ -1537,10 +1536,10 @@ describe('ReactDOMServerIntegration', () => {
     describe('text nodes', function() {
       it('should reconnect a div with text in code block & a literal',
         () => expectMarkupMatch(<div>{'Text'}</div>, <div>Text</div>));
-      it('should reconnect a div with text in two code blocks and a literal & code block', () =>
-        expectMarkupMatch(<div>{'Text1'}{'Text2'}</div>, <div>Text1{'Text2'}</div>));
-      it('should reconnect a div with a number and string version of number', () =>
-        expectMarkupMatch(<div>{2}</div>, <div>2</div>));
+      it('should reconnect a div with text in two code blocks and a literal & code block',
+        () => expectMarkupMatch(<div>{'Text1'}{'Text2'}</div>, <div>Text1{'Text2'}</div>));
+      it('should reconnect a div with a number and string version of number',
+        () => expectMarkupMatch(<div>{2}</div>, <div>2</div>));
       it('should error reconnecting different text',
         () => expectMarkupMismatch(<div>Text</div>, <div>Other Text</div>));
       it('should error reconnecting different numbers',
@@ -1549,17 +1548,19 @@ describe('ReactDOMServerIntegration', () => {
         () => expectMarkupMismatch(<div>{2}</div>, <div>3</div>));
       it('should error reconnecting different text in code block',
         () => expectMarkupMismatch(<div>{'Text1'}</div>, <div>{'Text2'}</div>));
-      it('should error reconnecting different text in two code blocks', () =>
-        expectMarkupMismatch(<div>{'Text1'}{'Text2'}</div>, <div>{'Text1'}{'Text3'}</div>));
-      it('should error reconnecting a div with text in code block and literal', () =>
-        expectMarkupMismatch(<div>Text1{'Text2'}</div>, <div>Text1{'Text3'}</div>));
-      it('should error reconnecting a div with text in code block and literal 2', () =>
-        expectMarkupMismatch(<div>{'Text1'}Text2</div>, <div>{'Text1'}Text3</div>));
+      it('should error reconnecting different text in two code blocks',
+        () => expectMarkupMismatch(<div>{'Text1'}{'Text2'}</div>, <div>{'Text1'}{'Text3'}</div>));
+      it('should error reconnecting a div with text in code block and literal',
+        () => expectMarkupMismatch(<div>Text1{'Text2'}</div>, <div>Text1{'Text3'}</div>));
+      it('should error reconnecting a div with text in code block and literal 2',
+        () => expectMarkupMismatch(<div>{'Text1'}Text2</div>, <div>{'Text1'}Text3</div>));
     });
 
     describe('element trees and children', function() {
-      it('should error reconnecting missing children', () => expectMarkupMismatch(<div><div /></div>, <div />));
-      it('should error reconnecting added children', () => expectMarkupMismatch(<div />, <div><div /></div>));
+      it('should error reconnecting missing children',
+        () => expectMarkupMismatch(<div><div /></div>, <div />));
+      it('should error reconnecting added children',
+        () => expectMarkupMismatch(<div />, <div><div /></div>));
       it('should error reconnecting more children',
         () => expectMarkupMismatch(<div><div /></div>, <div><div /><div /></div>));
       it('should error reconnecting fewer children',
@@ -1567,21 +1568,24 @@ describe('ReactDOMServerIntegration', () => {
       it('should error reconnecting reordered children',
         () => expectMarkupMismatch(<div><div /><span /></div>, <div><span /><div /></div>));
       it('should error reconnecting a div with children separated by whitespace on the client',
-          () => expectMarkupMismatch(
-            <div id="parent"><div id="child1" /><div id="child2" /></div>,
-            <div id="parent"><div id="child1" />      <div id="child2" /></div>)); // eslint-disable-line no-multi-spaces
+        () => expectMarkupMismatch(
+          <div id="parent"><div id="child1" /><div id="child2" /></div>,
+          <div id="parent"><div id="child1" />      <div id="child2" /></div>)
+        ); // eslint-disable-line no-multi-spaces
       it('should error reconnecting a div with children separated by different whitespace on the server',
         () => expectMarkupMismatch(
           <div id="parent"><div id="child1" />      <div id="child2" /></div>, // eslint-disable-line no-multi-spaces
-          <div id="parent"><div id="child1" /><div id="child2" /></div>));
+          <div id="parent"><div id="child1" /><div id="child2" /></div>)
+        );
       it('should error reconnecting a div with children separated by different whitespace',
           () => expectMarkupMismatch(
             <div id="parent"><div id="child1" /> <div id="child2" /></div>,
-            <div id="parent"><div id="child1" />      <div id="child2" /></div>)); // eslint-disable-line no-multi-spaces
-      it('can distinguish an empty component from a dom node', () =>
-        expectMarkupMismatch(<div><span /></div>, <div><EmptyComponent /></div>));
-      it('can distinguish an empty component from an empty text component', () =>
-        expectMarkupMismatch(<div><EmptyComponent /></div>, <div>{''}</div>));
+            <div id="parent"><div id="child1" />      <div id="child2" /></div>)
+          ); // eslint-disable-line no-multi-spaces
+      it('can distinguish an empty component from a dom node',
+        () => expectMarkupMismatch(<div><span /></div>, <div><EmptyComponent /></div>));
+      it('can distinguish an empty component from an empty text component',
+        () => expectMarkupMismatch(<div><EmptyComponent /></div>, <div>{''}</div>));
 
       it('should reconnect if component trees differ but resulting markup is the same', () => {
         class Component1 extends React.Component {
