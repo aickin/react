@@ -903,24 +903,24 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.getAttribute('value') || e.value).toBe('foo');
       });
 
-      itRenders('can render an input with a value and no onChange/readOnly', async render => {
+      itRenders('an input with a value and no onChange/readOnly', async render => {
         const e = await render(<input value="foo" />, 1);
         expect(e.getAttribute('value') || e.value).toBe('foo');
       });
 
-      itRenders('can render an input with a defaultValue', async render => {
+      itRenders('an input with a defaultValue', async render => {
         const e = await render(<input defaultValue="foo" />);
         expect(e.getAttribute('value') || e.value).toBe('foo');
         expect(e.getAttribute('defaultValue')).toBe(null);
       });
 
-      itRenders('can render an input with both a value and defaultValue part 1', async render => {
+      itRenders('an input with both a value and defaultValue part 1', async render => {
         const e = await render(<input value="foo" defaultValue="bar" readOnly={true} />, 1);
         expect(e.getAttribute('value') || e.value).toBe('foo');
         expect(e.getAttribute('defaultValue')).toBe(null);
       });
 
-      itRenders('can render an input with both a value and defaultValue part 2', async render => {
+      itRenders('an input with both a value and defaultValue part 2', async render => {
         const e = await render(<input defaultValue="bar" value="foo" readOnly={true} />, 1);
         expect(e.getAttribute('value') || e.value).toBe('foo');
         expect(e.getAttribute('defaultValue')).toBe(null);
@@ -938,24 +938,24 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.checked).toBe(true);
       });
 
-      itRenders('can render a checkbox that is checked and no onChange/readOnly', async render => {
+      itRenders('a checkbox that is checked and no onChange/readOnly', async render => {
         const e = await render(<input type="checkbox" checked={true} />, 1);
         expect(e.checked).toBe(true);
       });
 
-      itRenders('can render a checkbox with defaultChecked', async render => {
+      itRenders('a checkbox with defaultChecked', async render => {
         const e = await render(<input type="checkbox" defaultChecked={true} />);
         expect(e.checked).toBe(true);
         expect(e.getAttribute('defaultChecked')).toBe(null);
       });
 
-      itRenders('can render a checkbox with both a checked and defaultChecked part 1', async render => {
+      itRenders('a checkbox with both a checked and defaultChecked part 1', async render => {
         const e = await render(<input type="checkbox" checked={true} defaultChecked={false} readOnly={true} />, 1);
         expect(e.checked).toBe(true);
         expect(e.getAttribute('defaultChecked')).toBe(null);
       });
 
-      itRenders('can render a checkbox with both a checked and defaultChecked part 2', async render => {
+      itRenders('a checkbox with both a checked and defaultChecked part 2', async render => {
         const e = await render(<input type="checkbox" defaultChecked={false} checked={true} readOnly={true} />, 1);
         expect(e.checked).toBe(true);
         expect(e.getAttribute('defaultChecked')).toBe(null);
@@ -977,27 +977,27 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.value).toBe('foo');
       });
 
-      itRenders('can render a textarea with a value and no onChange/readOnly', async render => {
+      itRenders('a textarea with a value and no onChange/readOnly', async render => {
         const e = await render(<textarea value="foo" />, 1);
         expect(e.getAttribute('value')).toBe(null);
         expect(e.value).toBe('foo');
       });
 
-      itRenders('can render a textarea with a defaultValue', async render => {
+      itRenders('a textarea with a defaultValue', async render => {
         const e = await render(<textarea defaultValue="foo" />);
         expect(e.getAttribute('value')).toBe(null);
         expect(e.getAttribute('defaultValue')).toBe(null);
         expect(e.value).toBe('foo');
       });
 
-      itRenders('can render a textarea with both a value and defaultValue part 1', async render => {
+      itRenders('a textarea with both a value and defaultValue part 1', async render => {
         const e = await render(<textarea value="foo" defaultValue="bar" readOnly={true} />, 1);
         expect(e.getAttribute('value')).toBe(null);
         expect(e.getAttribute('defaultValue')).toBe(null);
         expect(e.value).toBe('foo');
       });
 
-      itRenders('can render a textarea with both a value and defaultValue part 2', async render => {
+      itRenders('a textarea with both a value and defaultValue part 2', async render => {
         const e = await render(<textarea defaultValue="bar" value="foo" readOnly={true} />, 1);
         expect(e.getAttribute('value')).toBe(null);
         expect(e.getAttribute('defaultValue')).toBe(null);
@@ -1047,22 +1047,22 @@ describe('ReactDOMServerIntegration', () => {
         expectSelectValue(e, ['bar', 'baz']);
       });
 
-      itRenders('can render a select with a value and no onChange/readOnly', async render => {
+      itRenders('a select with a value and no onChange/readOnly', async render => {
         const e = await render(<select value="bar">{options}</select>, 1);
         expectSelectValue(e, ['bar']);
       });
 
-      itRenders('can render a select with a defaultValue', async render => {
+      itRenders('a select with a defaultValue', async render => {
         const e = await render(<select defaultValue="bar">{options}</select>);
         expectSelectValue(e, ['bar']);
       });
 
-      itRenders('can render a select with both a value and defaultValue part 1', async render => {
+      itRenders('a select with both a value and defaultValue part 1', async render => {
         const e = await render(<select value="bar" defaultValue="baz" readOnly={true}>{options}</select>, 1);
         expectSelectValue(e, ['bar']);
       });
 
-      itRenders('can render a select with both a value and defaultValue part 2', async render => {
+      itRenders('a select with both a value and defaultValue part 2', async render => {
         const e = await render(<select defaultValue="baz" value="bar" readOnly={true}>{options}</select>, 1);
         expectSelectValue(e, ['bar']);
       });
@@ -1110,16 +1110,16 @@ describe('ReactDOMServerIntegration', () => {
         expect(e[valueKey]).toBe(changedValue);
       };
 
-      itClientRenders('should render a controlled text input',
+      itClientRenders('a controlled text input',
         render => testControlledField(render, 'Hello', 'Goodbye'));
 
-      itClientRenders('should render a controlled textarea',
+      itClientRenders('a controlled textarea',
         render => testControlledField(render, 'Hello', 'Goodbye', 'textarea'));
 
-      itClientRenders('should render a controlled checkbox',
+      itClientRenders('a controlled checkbox',
         render => testControlledField(render, true, false, 'input', 'checked', {type:'checkbox'}));
 
-      itClientRenders('should render a controlled select',
+      itClientRenders('a controlled select',
         render => testControlledField(render, 'B', 'A', 'select', 'value', {},
           [
             <option key="1" value="A">Option A</option>,
@@ -1132,7 +1132,7 @@ describe('ReactDOMServerIntegration', () => {
       const testFieldWithUserInteractionBeforeClientRender = async (
         element, initialValue = 'foo', changedValue = 'bar', valueKey = 'value'
       ) => {
-        const field = await serverRender(element)
+        const field = await serverRender(element);
         expect(field[valueKey]).toBe(initialValue);
 
         // simulate a user typing in the field **before** client-side reconnect happens.
@@ -1188,7 +1188,7 @@ describe('ReactDOMServerIntegration', () => {
   });
 
   describe('lifecycle', function() {
-    itRenders('should call getInitialState for createClass components', async render => {
+    itRenders('with a getInitialState call for createClass components', async render => {
       const Component = React.createClass({
         getInitialState: function() {
           return {text: 'foo'};
@@ -1203,7 +1203,7 @@ describe('ReactDOMServerIntegration', () => {
   });
 
   describe('context', function() {
-    itRenders('can render context', async render => {
+    itRenders('with context', async render => {
       class ClassChildWithContext extends React.Component {
         render() {
           return <div id="classChild">{this.context.text}</div>;
@@ -1269,7 +1269,7 @@ describe('ReactDOMServerIntegration', () => {
       expect(e.querySelector('#statelessWrongChild').textContent).toBe('');
     });
 
-    itRenders('can pass context through to a grandchild', async render => {
+    itRenders('with context passed through to a grandchild', async render => {
       class ClassGrandchild extends React.Component {
         render() {
           return <div id="classGrandchild">{this.context.text}</div>;
@@ -1310,7 +1310,7 @@ describe('ReactDOMServerIntegration', () => {
       expect(e.querySelector('#classGrandchild').textContent).toBe('purple');
     });
 
-    itRenders('should let a child context override a parent context', async render => {
+    itRenders('a child context overriding a parent context', async render => {
       class Parent extends React.Component {
         getChildContext() {
           return {text: 'purple'};
@@ -1340,7 +1340,7 @@ describe('ReactDOMServerIntegration', () => {
       expect(e.textContent).toBe('red');
     });
 
-    itRenders('should merge a child context with a parent context', async render => {
+    itRenders('a child context with a parent context', async render => {
       class Parent extends React.Component {
         getChildContext() {
           return {text1: 'purple'};
@@ -1371,7 +1371,7 @@ describe('ReactDOMServerIntegration', () => {
       expect(e.querySelector('#second').textContent).toBe('red');
     });
 
-    itRenders('should run componentWillMount before getChildContext', async render => {
+    itRenders('with a call to componentWillMount before getChildContext', async render => {
       class Parent extends React.Component {
         getChildContext() {
           return {text: this.state.text};
@@ -1584,8 +1584,8 @@ describe('ReactDOMServerIntegration', () => {
       it('should error reconnecting a div with children separated by whitespace on the client',
         () => expectMarkupMismatch(
           <div id="parent"><div id="child1" /><div id="child2" /></div>,
-          <div id="parent"><div id="child1" />      <div id="child2" /></div>)
-        ); // eslint-disable-line no-multi-spaces
+          <div id="parent"><div id="child1" />      <div id="child2" /></div>) // eslint-disable-line no-multi-spaces
+        );
       it('should error reconnecting a div with children separated by different whitespace on the server',
         () => expectMarkupMismatch(
           <div id="parent"><div id="child1" />      <div id="child2" /></div>, // eslint-disable-line no-multi-spaces
@@ -1594,8 +1594,8 @@ describe('ReactDOMServerIntegration', () => {
       it('should error reconnecting a div with children separated by different whitespace',
           () => expectMarkupMismatch(
             <div id="parent"><div id="child1" /> <div id="child2" /></div>,
-            <div id="parent"><div id="child1" />      <div id="child2" /></div>)
-          ); // eslint-disable-line no-multi-spaces
+            <div id="parent"><div id="child1" />      <div id="child2" /></div>) // eslint-disable-line no-multi-spaces
+          );
       it('can distinguish an empty component from a dom node',
         () => expectMarkupMismatch(<div><span /></div>, <div><EmptyComponent /></div>));
       it('can distinguish an empty component from an empty text component',
